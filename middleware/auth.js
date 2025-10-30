@@ -1,32 +1,34 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = "your-secret-key";
 
+// Authentication middleware - verifies JWT and attaches user payload to req.user
 const authMiddleware = (req, res, next) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1];
-        
-        if (!token) {
-            return res.status(401).json({ message: "No token provided" });
-        }
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Authorization header required' });
+    }
 
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({ message: "Invalid token" });
+    const token = authHeader.split(' ')[1];
+    try {
+        const secret = process.env.JWT_SECRET || 'dev_secret_change_me';
+        const payload = jwt.verify(token, secret);
+        // Attach minimal user info to request
+        req.user = payload;
+        return next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid or expired token' });
     }
 };
 
-// Middleware để kiểm tra role
-const checkRole = (roles) => {
-    return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ 
-                message: "You don't have permission to perform this action" 
-            });
-        }
-        next();
-    };
+// Role checking middleware factory
+const checkRole = (...allowedRoles) => (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const userRole = req.user.role || 'student';
+    if (!allowedRoles.includes(userRole)) {
+        return res.status(403).json({ message: 'Forbidden: insufficient role' });
+    }
+    next();
 };
 
 module.exports = {

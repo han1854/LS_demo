@@ -51,6 +51,14 @@ db.Course.belongsToMany(db.User, {
   as: "students"
 });
 
+
+
+db.User.hasMany(db.Enrollment, { foreignKey: "UserID", as: "enrollments" });
+db.Enrollment.belongsTo(db.User, { foreignKey: "UserID", as: "user" });
+
+db.Course.hasMany(db.Enrollment, { foreignKey: "CourseID", as: "enrollments" });
+db.Enrollment.belongsTo(db.Course, { foreignKey: "CourseID", as: "course" });
+
 db.Lesson.hasMany(db.Assignment, { foreignKey: "LessonID", as: "assignments" });
 db.Assignment.belongsTo(db.Lesson, { foreignKey: "LessonID", as: "lesson" });
 
@@ -59,6 +67,9 @@ db.Quiz.belongsTo(db.Lesson, { foreignKey: "LessonID", as: "lesson" });
 
 db.Assignment.hasMany(db.Submission, { foreignKey: "AssignmentID", as: "submissions" });
 db.Submission.belongsTo(db.Assignment, { foreignKey: "AssignmentID", as: "assignment" });
+
+db.User.hasMany(db.Submission, { foreignKey: "UserID", as: "submissions" });
+db.Submission.belongsTo(db.User, { foreignKey: "UserID", as: "user" });
 
 db.Quiz.hasMany(db.Question, { foreignKey: "QuizID", as: "questions" });
 db.Question.belongsTo(db.Quiz, { foreignKey: "QuizID", as: "quiz" });

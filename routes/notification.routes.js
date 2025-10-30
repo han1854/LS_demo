@@ -1,43 +1,63 @@
 const express = require("express");
 const router = express.Router();
-const notificationController = require("../controllers/notification.controller");
+const notificationController = require("../controllers/notification.controller.compat");
 const { authMiddleware, checkRole } = require("../middleware/auth");
+const { validateNotification } = require("../middleware/validations");
 
-// Create notification (admin/teacher only)
-router.post("/", 
-    authMiddleware, 
-    checkRole(['admin', 'teacher']), 
-    notificationController.create
-);
-
-// Get user notifications
+// User Notification Management
 router.get("/user/:userId", 
     authMiddleware, 
     notificationController.getUserNotifications
 );
 
-// Mark as read
-router.put("/read/:id", 
-    authMiddleware, 
-    notificationController.markAsRead
-);
-
-// Mark all as read
-router.put("/read-all/:userId", 
-    authMiddleware, 
-    notificationController.markAllAsRead
-);
-
-// Delete notification
-router.delete("/:id", 
-    authMiddleware, 
-    notificationController.delete
-);
-
-// Get unread count
 router.get("/count/:userId", 
     authMiddleware, 
-    notificationController.getCount
+    notificationController.getNotificationCount
+);
+
+// Individual Notification Actions
+router.post("/", 
+    authMiddleware, 
+    checkRole(['admin', 'instructor']), 
+    validateNotification,
+    notificationController.createNotification
+);
+
+router.put("/:id/read", 
+    authMiddleware, 
+    notificationController.markNotificationRead
+);
+
+router.put("/read-all/:userId", 
+    authMiddleware, 
+    notificationController.markAllNotificationsRead
+);
+
+router.delete("/:id", 
+    authMiddleware, 
+    notificationController.deleteNotification
+);
+
+// Notification Preferences
+router.put("/preferences", 
+    authMiddleware,
+    notificationController.updateNotificationPreferences
+);
+
+router.get("/preferences", 
+    authMiddleware,
+    notificationController.getNotificationPreferences
+);
+
+// Notification Subscriptions
+router.post("/subscribe", 
+    authMiddleware,
+    notificationController.subscribeToNotifications
+);
+
+router.post("/unsubscribe", 
+    authMiddleware,
+    notificationController.unsubscribeFromNotifications
 );
 
 module.exports = router;

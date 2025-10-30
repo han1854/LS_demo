@@ -55,7 +55,16 @@ exports.login = async (req, res) => {
 // Create new user
 exports.create = async (req, res) => {
     try {
-        const { FullName, Email, Password, Role } = req.body;
+        const { 
+            FullName, 
+            Email, 
+            Password, 
+            Role,
+            Avatar,
+            Bio,
+            PhoneNumber,
+            Address 
+        } = req.body;
         
         // Basic validation
         if (!FullName || !Email || !Password) {
@@ -67,12 +76,17 @@ exports.create = async (req, res) => {
         // Hash password
         const PasswordHash = await bcrypt.hash(Password, 10);
 
-        // Create user
+        // Create user with optional fields
         const user = await User.create({
             FullName,
             Email,
             PasswordHash,
-            Role: Role || 'student'
+            Role: Role || 'student',
+            Status: 'active',
+            Avatar: Avatar || null,
+            Bio: Bio || null,
+            PhoneNumber: PhoneNumber || null,
+            Address: Address || null
         });
         
         // Don't send password hash in response
@@ -129,13 +143,27 @@ exports.findOne = async (req, res) => {
 // Update user
 exports.update = async (req, res) => {
     try {
-        if (req.body.Password) {
-            req.body.PasswordHash = await bcrypt.hash(req.body.Password, 10);
-            delete req.body.Password;
+        const updateData = { ...req.body };
+        
+        // Handle password update separately
+        if (updateData.Password) {
+            updateData.PasswordHash = await bcrypt.hash(updateData.Password, 10);
+            delete updateData.Password;
         }
 
-        const [updated] = await User.update(req.body, {
-            where: { UserID: req.params.id }
+        // Remove fields that shouldn't be updated directly
+        delete updateData.UserID;
+        delete updateData.CreatedAt;
+
+        // Validate status if it's being updated
+        if (updateData.Status && !['active', 'inactive', 'banned'].includes(updateData.Status)) {
+            return res.status(400).json({ message: "Invalid status value" });
+        }
+
+        const [updated] = await User.update(updateData, {
+            where: { UserID: req.params.id },
+            returning: true,
+            validate: true
         });
 
         if (updated === 1) {
@@ -147,6 +175,15 @@ exports.update = async (req, res) => {
             res.status(404).json({ message: "User not found" });
         }
     } catch (error) {
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                message: "Validation error",
+                errors: error.errors.map(err => ({
+                    field: err.path,
+                    message: err.message
+                }))
+            });
+        }
         res.status(500).json({ message: error.message });
     }
 };

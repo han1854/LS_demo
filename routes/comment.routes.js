@@ -1,20 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const commentController = require("../controllers/comment.controller");
+const commentController = require("../controllers/comment.controller.compat.js");
+const { authMiddleware, checkRole } = require("../middleware/auth");
 
-// Create a new comment
-router.post("/", commentController.create);
-
-// Get all comments
-router.get("/", commentController.findAll);
-
-// Get a single comment by id
-router.get("/:id", commentController.findOne);
-
-// Update a comment
-router.put("/:id", commentController.update);
-
-// Delete a comment
-router.delete("/:id", commentController.delete);
+router.post("/:postId", authMiddleware, commentController.create);
+router.get("/post/:postId", commentController.getPostComments);
+router.put("/:id", authMiddleware, commentController.update);
+router.delete("/:id", authMiddleware, commentController.delete);
+router.post("/:id/reply", authMiddleware, commentController.reply);
+router.put("/:id/moderate", authMiddleware, checkRole(['admin', 'instructor']), commentController.moderate);
 
 module.exports = router;

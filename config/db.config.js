@@ -2,7 +2,7 @@ module.exports = {
   HOST: process.env.DB_HOST || "localhost",
   USER: process.env.DB_USER || "sa",
   PASSWORD: process.env.DB_PASSWORD || "SA123",
-  DB: process.env.DB_NAME || "WebsiteHoctap_db",
+  DB: process.env.DB_NAME || "LS_demo_db",
   dialect: "mssql",
   dialectOptions: {
     options: {

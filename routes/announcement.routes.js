@@ -1,20 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const announcementController = require("../controllers/announcement.controller");
+const announcementController = require("../controllers/announcement.controller.compat.js");
+const { authMiddleware, checkRole } = require("../middleware/auth");
 
-// Create a new announcement
-router.post("/", announcementController.create);
-
-// Get all announcements
-router.get("/", announcementController.findAll);
-
-// Get a single announcement by id
-router.get("/:id", announcementController.findOne);
-
-// Update an announcement
-router.put("/:id", announcementController.update);
-
-// Delete an announcement
-router.delete("/:id", announcementController.delete);
+router.post("/course/:courseId", authMiddleware, checkRole(['instructor', 'admin']), announcementController.create);
+router.get("/course/:courseId", authMiddleware, announcementController.getCourseAnnouncements);
+router.get("/my", authMiddleware, announcementController.getMyAnnouncements);
+router.put("/:id", authMiddleware, checkRole(['instructor', 'admin']), announcementController.update);
+router.delete("/:id", authMiddleware, checkRole(['instructor', 'admin']), announcementController.delete);
+router.put("/:id/publish", authMiddleware, checkRole(['instructor', 'admin']), announcementController.publish);
+router.get("/:id/recipients", authMiddleware, checkRole(['instructor', 'admin']), announcementController.getRecipients);
 
 module.exports = router;

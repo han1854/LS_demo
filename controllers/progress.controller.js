@@ -3,40 +3,57 @@ const Progress = db.Progress;
 
 // Update lesson progress
 exports.updateProgress = async (req, res) => {
+    const transaction = await db.sequelize.transaction();
+    
     try {
         const { userId, courseId, lessonId } = req.params;
-        const { status, timeSpent } = req.body;
+        const { status, timeSpent, score, notes } = req.body;
 
+        // Validate status
+        if (!['not-started', 'in-progress', 'completed'].includes(status)) {
+            await transaction.rollback();
+            return res.status(400).json({ message: "Invalid status value" });
+        }
+
+        // Find existing progress
         let progress = await Progress.findOne({
             where: {
                 UserID: userId,
                 CourseID: courseId,
                 LessonID: lessonId
-            }
+            },
+            transaction
         });
 
         if (progress) {
+            // Update existing progress
             progress = await progress.update({
                 Status: status,
-                TimeSpent: timeSpent,
+                TimeSpent: (progress.TimeSpent || 0) + (timeSpent || 0),
                 LastAccessDate: new Date(),
-                CompletionDate: status === 'completed' ? new Date() : null
-            });
+                CompletionDate: status === 'completed' ? new Date() : null,
+                Score: score !== undefined ? score : progress.Score,
+                Notes: notes !== undefined ? notes : progress.Notes
+            }, { transaction });
         } else {
+            // Create new progress
             progress = await Progress.create({
                 UserID: userId,
                 CourseID: courseId,
                 LessonID: lessonId,
                 Status: status,
-                TimeSpent: timeSpent,
+                TimeSpent: timeSpent || 0,
                 LastAccessDate: new Date(),
-                CompletionDate: status === 'completed' ? new Date() : null
-            });
+                CompletionDate: status === 'completed' ? new Date() : null,
+                Score: score,
+                Notes: notes
+            }, { transaction });
         }
 
-        // Kiểm tra và cập nhật hoàn thành khóa học
-        const allLessons = await db.Lesson.findAll({
-            where: { CourseID: courseId }
+        // Update course enrollment progress
+        const totalLessons = await db.Lesson.count({
+            where: { CourseID: courseId },
+            transaction
         });
 
         const completedLessons = await Progress.count({
@@ -44,24 +61,77 @@ exports.updateProgress = async (req, res) => {
                 UserID: userId,
                 CourseID: courseId,
                 Status: 'completed'
-            }
+            },
+            transaction
         });
 
-        if (completedLessons === allLessons.length) {
-            // Tự động tạo chứng chỉ nếu hoàn thành tất cả bài học
-            const certificate = await db.Certificate.findOrCreate({
+        const progressPercentage = (completedLessons / totalLessons) * 100;
+
+        // Kiểm tra và cập nhật hoàn thành khóa học
+        // Update enrollment
+        await db.Enrollment.update(
+            {
+                Progress: progressPercentage,
+                Status: progressPercentage === 100 ? 'completed' : 'active',
+                LastAccessDate: new Date()
+            },
+            {
+                where: {
+                    UserID: userId,
+                    CourseID: courseId
+                },
+                transaction
+            }
+        );
+
+        // If course is completed, generate certificate
+        if (progressPercentage === 100) {
+            // Generate certificate number
+            const certificateNumber = `CERT-${courseId}-${userId}-${Date.now()}`;
+            
+            // Create or update certificate
+            await db.Certificate.findOrCreate({
                 where: {
                     UserID: userId,
                     CourseID: courseId
                 },
                 defaults: {
+                    CertificateNumber: certificateNumber,
                     CompletionDate: new Date(),
+                    IssueDate: new Date(),
                     Status: 'active'
-                }
+                },
+                transaction
             });
+
+            // Create notification for course completion
+            await db.Notification.create({
+                UserID: userId,
+                Title: 'Course Completed!',
+                Message: `Congratulations! You have completed the course and earned a certificate.`,
+                Type: 'achievement',
+                RelatedID: courseId
+            }, { transaction });
         }
 
-        res.json(progress);
+        await transaction.commit();
+
+        // Return updated progress with related data
+        const updatedProgress = await Progress.findOne({
+            where: {
+                UserID: userId,
+                CourseID: courseId,
+                LessonID: lessonId
+            },
+            include: [
+                {
+                    model: db.Lesson,
+                    attributes: ['Title', 'Description']
+                }
+            ]
+        });
+
+        res.json(updatedProgress);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

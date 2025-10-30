@@ -41,6 +41,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     Reminder: { 
       type: DataTypes.INTEGER  // minutes before start to send reminder
+    },
+    CreatedAt: { 
+      type: DataTypes.DATE, 
+      defaultValue: sequelize.fn('GETDATE') 
     }
   }, {
     tableName: "Schedules",

@@ -1,20 +1,97 @@
 const express = require("express");
 const router = express.Router();
-const submissionController = require("../controllers/submission.controller");
+const submissionController = require("../controllers/submission.controller.compat.js");
+const { authMiddleware, checkRole } = require("../middleware/auth");
 
-// Create a new submission
-router.post("/", submissionController.create);
+// Student Submission Management
+router.post("/assignment/:assignmentId", 
+    authMiddleware, 
+    submissionController.create
+);
 
-// Get all submissions
-router.get("/", submissionController.findAll);
+router.put("/:id", 
+    authMiddleware, 
+    submissionController.update
+);
 
-// Get a single submission by id
-router.get("/:id", submissionController.findOne);
+router.delete("/:id", 
+    authMiddleware, 
+    submissionController.delete
+);
 
-// Update a submission
-router.put("/:id", submissionController.update);
+// Student Submission Access
+router.get("/my/submissions", 
+    authMiddleware, 
+    submissionController.getMySubmissions
+);
 
-// Delete a submission
-router.delete("/:id", submissionController.delete);
+router.get("/my/grades", 
+    authMiddleware, 
+    submissionController.getMyGrades
+);
+
+// Instructor Access
+router.get("/course/:courseId", 
+    authMiddleware, 
+    checkRole(["instructor"]), 
+    submissionController.getCourseSubmissions
+);
+
+router.get("/assignment/:assignmentId", 
+    authMiddleware, 
+    checkRole(["instructor"]), 
+    submissionController.getAssignmentSubmissions
+);
+
+router.get("/student/:studentId", 
+    authMiddleware, 
+    checkRole(["instructor"]), 
+    submissionController.getStudentSubmissions
+);
+
+// Individual Submission Access
+router.get("/:id", 
+    authMiddleware, 
+    submissionController.findOne
+);
+
+// Instructor Grading
+router.put("/:id/grade", 
+    authMiddleware, 
+    checkRole(["instructor"]), 
+    submissionController.gradeSubmission
+);
+
+router.put("/:id/feedback", 
+    authMiddleware, 
+    checkRole(["instructor"]), 
+    submissionController.provideFeedback
+);
+
+// Bulk Operations (Instructor)
+router.post("/bulk/grade", 
+    authMiddleware, 
+    checkRole(["instructor"]), 
+    submissionController.bulkGradeSubmissions
+);
+
+// Statistics and Reports
+router.get("/assignment/:assignmentId/stats", 
+    authMiddleware, 
+    checkRole(["instructor"]), 
+    submissionController.getSubmissionStats
+);
+
+// Late Submission Handling
+router.post("/assignment/:assignmentId/request-extension", 
+    authMiddleware, 
+    submissionController.requestExtension
+);
+
+router.put("/extension/:requestId", 
+    authMiddleware, 
+    checkRole(["instructor"]), 
+    submissionController.handleExtensionRequest
+);
 
 module.exports = router;
