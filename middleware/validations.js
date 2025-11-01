@@ -1,208 +1,303 @@
-// Basic validation helpers
-const isEmpty = (value) => 
-    value === undefined || 
-    value === null || 
-    (typeof value === 'object' && Object.keys(value).length === 0) ||
-    (typeof value === 'string' && value.trim().length === 0);
+// Validation helpers
+const isEmpty = value =>
+  value === undefined ||
+  value === null ||
+  (typeof value === 'object' && Object.keys(value).length === 0) ||
+  (typeof value === 'string' && value.trim().length === 0);
 
-// Transaction validation middleware
-const validateTransaction = (req, res, next) => {
-    const errors = {};
-    
-    // Required fields for a transaction
-    if (isEmpty(req.body.amount)) {
-        errors.amount = 'Amount is required';
-    } else if (isNaN(req.body.amount) || req.body.amount <= 0) {
-        errors.amount = 'Amount must be a positive number';
-    }
-
-    if (isEmpty(req.body.currency)) {
-        errors.currency = 'Currency is required';
-    }
-
-    if (isEmpty(req.body.paymentMethod)) {
-        errors.paymentMethod = 'Payment method is required';
-    }
-
-    // Check for any validation errors
-    if (Object.keys(errors).length > 0) {
-        return res.status(400).json({ 
-            success: false,
-            errors: errors 
-        });
-    }
-
-    next();
+const isValidDate = date => {
+  const d = new Date(date);
+  return d instanceof Date && !isNaN(d);
 };
 
-// Enrollment validation middleware
+const isValidEmail = email => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const isValidPhone = phone => {
+  const phoneRegex = /^\+?[\d\s-]{8,}$/;
+  return phoneRegex.test(phone);
+};
+
+const isValidURL = url => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const sanitizeHTML = str => {
+  return str.replace(/<[^>]*>/g, '');
+};
+
+// Validation middlewares
+const validateCategory = (req, res, next) => {
+  const errors = {};
+
+  if (isEmpty(req.body.Name)) {
+    errors.Name = 'Tên danh mục không được để trống';
+  } else if (typeof req.body.Name === 'string' && req.body.Name.trim().length < 2) {
+    errors.Name = 'Tên danh mục phải có ít nhất 2 ký tự';
+  }
+
+  if (req.body.ParentID !== undefined && req.body.ParentID !== null) {
+    const pid = parseInt(req.body.ParentID, 10);
+    if (isNaN(pid) || pid <= 0) {
+      errors.ParentID = 'ID danh mục cha không hợp lệ';
+    }
+    // Note: Existence check against DB is omitted here to avoid circular requires.
+  }
+
+  if (req.body.Status !== undefined) {
+    if (!['active', 'inactive'].includes(req.body.Status)) {
+      errors.Status = 'Trạng thái không hợp lệ';
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+
+  next();
+};
+
 const validateEnrollment = (req, res, next) => {
-    const errors = {};
-    const courseId = req.params.courseId;
-    
-    // Validate course ID
-    if (!courseId) {
-        errors.courseId = 'Course ID is required';
-    }
-
-    // Check for any validation errors
-    if (Object.keys(errors).length > 0) {
-        return res.status(400).json({ 
-            success: false,
-            errors: errors 
-        });
-    }
-
-    next();
+  const errors = {};
+  const courseId = req.params.courseId || req.body.courseId || req.query.courseId;
+  if (!courseId) {
+    errors.courseId = 'Course ID is required';
+  }
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+  next();
 };
 
-// File validation middleware
 const validateFile = (req, res, next) => {
-    const errors = {};
-
-    // Check if file exists
-    if (!req.file && !req.files) {
-        errors.file = 'File is required';
-    }
-
-    // Validate file size
-    if (req.file && req.file.size > 100 * 1024 * 1024) { // 100MB limit
-        errors.file = 'File size exceeds limit (100MB)';
-    }
-
-    if (req.files) {
-        req.files.forEach((file, index) => {
-            if (file.size > 100 * 1024 * 1024) {
-                errors[`file${index}`] = `File ${file.originalname} exceeds size limit (100MB)`;
-            }
-        });
-    }
-
-    // Check for any validation errors
-    if (Object.keys(errors).length > 0) {
-        return res.status(400).json({ 
-            success: false,
-            errors: errors 
-        });
-    }
-
-    next();
+  const errors = {};
+  if (!req.file && !req.files) {
+    errors.file = 'File is required';
+  }
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+  next();
 };
 
-// Schedule validation middleware
 const validateSchedule = (req, res, next) => {
-    const errors = {};
-
-    // Required fields for schedule
-    if (isEmpty(req.body.startTime)) {
-        errors.startTime = 'Start time is required';
-    }
-
-    if (isEmpty(req.body.endTime)) {
-        errors.endTime = 'End time is required';
-    }
-
-    if (isEmpty(req.body.title)) {
-        errors.title = 'Title is required';
-    }
-
-    if (req.body.startTime && req.body.endTime) {
-        const start = new Date(req.body.startTime);
-        const end = new Date(req.body.endTime);
-        if (end <= start) {
-            errors.timeRange = 'End time must be after start time';
-        }
-    }
-
-    // Check for any validation errors
-    if (Object.keys(errors).length > 0) {
-        return res.status(400).json({ 
-            success: false,
-            errors: errors 
-        });
-    }
-
-    next();
+  const errors = {};
+  if (isEmpty(req.body.StartTime)) errors.startTime = 'Start time is required';
+  if (isEmpty(req.body.EndTime)) errors.endTime = 'End time is required';
+  if (!isEmpty(req.body.StartTime) && !isEmpty(req.body.EndTime)) {
+    const start = new Date(req.body.StartTime);
+    const end = new Date(req.body.EndTime);
+    if (end <= start) errors.timeRange = 'End time must be after start time';
+  }
+  if (Object.keys(errors).length > 0) return res.status(400).json({ success: false, errors });
+  next();
 };
 
-// Notification validation middleware
 const validateNotification = (req, res, next) => {
-    const errors = {};
-
-    // Required fields for notification
-    if (isEmpty(req.body.title)) {
-        errors.title = 'Title is required';
-    }
-
-    if (isEmpty(req.body.message)) {
-        errors.message = 'Message is required';
-    }
-
-    if (isEmpty(req.body.type)) {
-        errors.type = 'Type is required';
-    }
-
-    // If sending to multiple users, validate userIds array
-    if (req.body.userIds) {
-        if (!Array.isArray(req.body.userIds) || req.body.userIds.length === 0) {
-            errors.userIds = 'UserIds must be a non-empty array';
-        }
-    } else if (isEmpty(req.body.userId)) {
-        // If not sending to multiple users, userId is required
-        errors.userId = 'UserId is required';
-    }
-
-    // Check for any validation errors
-    if (Object.keys(errors).length > 0) {
-        return res.status(400).json({ 
-            success: false,
-            errors: errors 
-        });
-    }
-
-    next();
+  const errors = {};
+  if (isEmpty(req.body.Title)) errors.title = 'Title is required';
+  if (isEmpty(req.body.Message)) errors.message = 'Message is required';
+  if (Object.keys(errors).length > 0) return res.status(400).json({ success: false, errors });
+  next();
 };
 
-// Progress validation middleware
 const validateProgress = (req, res, next) => {
-    const errors = {};
+  const errors = {};
+  if (req.body.Status && !['not-started', 'in-progress', 'completed'].includes(req.body.Status)) {
+    errors.Status = 'Invalid status';
+  }
+  if (req.body.TimeSpent !== undefined && (isNaN(req.body.TimeSpent) || req.body.TimeSpent < 0)) {
+    errors.TimeSpent = 'TimeSpent must be a non-negative number';
+  }
+  if (Object.keys(errors).length > 0) return res.status(400).json({ success: false, errors });
+  next();
+};
 
-    // Validate status if provided
-    if (req.body.status && !['not-started', 'in-progress', 'completed'].includes(req.body.status)) {
-        errors.status = 'Status must be one of: not-started, in-progress, completed';
+const validateTransaction = (req, res, next) => {
+  const errors = {};
+  if (isEmpty(req.body.Amount)) errors.amount = 'Amount is required';
+  if (isNaN(req.body.Amount) || req.body.Amount <= 0)
+    errors.amount = 'Amount must be a positive number';
+  if (Object.keys(errors).length > 0) return res.status(400).json({ success: false, errors });
+  next();
+};
+
+const validateCourse = (req, res, next) => {
+  const errors = {};
+
+  if (isEmpty(req.body.Title)) {
+    errors.Title = 'Course title is required';
+  } else if (req.body.Title.length < 5) {
+    errors.Title = 'Course title must be at least 5 characters long';
+  }
+
+  if (isEmpty(req.body.Description)) {
+    errors.Description = 'Course description is required';
+  }
+
+  if (req.body.Price !== undefined) {
+    const price = parseFloat(req.body.Price);
+    if (isNaN(price) || price < 0) {
+      errors.Price = 'Price must be a non-negative number';
     }
+  }
 
-    // Validate timeSpent if provided
-    if (req.body.timeSpent !== undefined) {
-        if (isNaN(req.body.timeSpent) || req.body.timeSpent < 0) {
-            errors.timeSpent = 'Time spent must be a non-negative number';
-        }
+  if (req.body.CategoryID) {
+    const catId = parseInt(req.body.CategoryID);
+    if (isNaN(catId) || catId <= 0) {
+      errors.CategoryID = 'Invalid category ID';
     }
+  }
 
-    // Validate score if provided
-    if (req.body.score !== undefined) {
-        if (isNaN(req.body.score) || req.body.score < 0 || req.body.score > 100) {
-            errors.score = 'Score must be a number between 0 and 100';
-        }
+  if (req.body.ThumbnailURL && !isValidURL(req.body.ThumbnailURL)) {
+    errors.ThumbnailURL = 'Invalid thumbnail URL';
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+  next();
+};
+
+const validateLesson = (req, res, next) => {
+  const errors = {};
+
+  if (isEmpty(req.body.Title)) {
+    errors.Title = 'Lesson title is required';
+  }
+
+  if (req.body.Duration) {
+    const duration = parseInt(req.body.Duration);
+    if (isNaN(duration) || duration <= 0) {
+      errors.Duration = 'Duration must be a positive number';
     }
+  }
 
-    // Check for any validation errors
-    if (Object.keys(errors).length > 0) {
-        return res.status(400).json({ 
-            success: false,
-            errors: errors 
-        });
+  if (req.body.Order) {
+    const order = parseInt(req.body.Order);
+    if (isNaN(order) || order < 0) {
+      errors.Order = 'Order must be a non-negative number';
     }
+  }
 
-    next();
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+  next();
+};
+
+const validateQuiz = (req, res, next) => {
+  const errors = {};
+
+  if (isEmpty(req.body.Title)) {
+    errors.Title = 'Quiz title is required';
+  }
+
+  if (req.body.Duration) {
+    const duration = parseInt(req.body.Duration);
+    if (isNaN(duration) || duration <= 0) {
+      errors.Duration = 'Duration must be a positive number';
+    }
+  }
+
+  if (req.body.PassingScore) {
+    const score = parseFloat(req.body.PassingScore);
+    if (isNaN(score) || score < 0 || score > 100) {
+      errors.PassingScore = 'Passing score must be between 0 and 100';
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+  next();
+};
+
+const validateComment = (req, res, next) => {
+  const errors = {};
+
+  if (isEmpty(req.body.Content)) {
+    errors.Content = 'Comment content is required';
+  } else {
+    // Sanitize HTML to prevent XSS
+    req.body.Content = sanitizeHTML(req.body.Content);
+  }
+
+  if (req.body.ParentID) {
+    const parentId = parseInt(req.body.ParentID);
+    if (isNaN(parentId) || parentId <= 0) {
+      errors.ParentID = 'Invalid parent comment ID';
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+  next();
+};
+
+const validateRating = (req, res, next) => {
+  const errors = {};
+
+  const rating = parseInt(req.body.Rating);
+  if (isNaN(rating) || rating < 1 || rating > 5) {
+    errors.Rating = 'Rating must be between 1 and 5';
+  }
+
+  if (req.body.Review) {
+    req.body.Review = sanitizeHTML(req.body.Review);
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+  next();
+};
+
+const validateUser = (req, res, next) => {
+  const errors = {};
+
+  if (req.body.Email && !isValidEmail(req.body.Email)) {
+    errors.Email = 'Invalid email format';
+  }
+
+  if (req.body.Phone && !isValidPhone(req.body.Phone)) {
+    errors.Phone = 'Invalid phone number format';
+  }
+
+  if (req.body.Password && req.body.Password.length < 8) {
+    errors.Password = 'Password must be at least 8 characters long';
+  }
+
+  if (req.body.Avatar && !isValidURL(req.body.Avatar)) {
+    errors.Avatar = 'Invalid avatar URL';
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+  next();
 };
 
 module.exports = {
-    validateTransaction,
-    validateEnrollment,
-    validateFile,
-    validateSchedule,
-    validateNotification,
-    validateProgress,
-    // Export other validation middlewares as needed
+  validateCategory,
+  validateCourse,
+  validateLesson,
+  validateQuiz,
+  validateComment,
+  validateRating,
+  validateUser,
+  validateEnrollment,
+  validateFile,
+  validateSchedule,
+  validateNotification,
+  validateProgress,
+  validateTransaction,
 };

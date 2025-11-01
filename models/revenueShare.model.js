@@ -1,120 +1,92 @@
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const RevenueShare = sequelize.define("RevenueShare", {
-    ShareID: { 
-      type: DataTypes.INTEGER, 
-      autoIncrement: true, 
-      primaryKey: true 
-    },
-    CourseID: { 
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Courses',
-        key: 'CourseID'
-      }
-    },
-    InstructorID: { 
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Users',
-        key: 'UserID'
-      }
-    },
-    TransactionID: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Transactions',
-        key: 'TransactionID'
-      }
-    },
-    Amount: { 
-      type: DataTypes.DECIMAL(10,2),
-      allowNull: false,
-      validate: {
-        min: 0
-      }
-    },
-    SharePercentage: {
-      type: DataTypes.DECIMAL(5,2),
-      allowNull: false,
-      defaultValue: 70.00, // 70%
-      validate: {
-        min: 0,
-        max: 100
-      }
-    },
-    Currency: {
-      type: DataTypes.STRING(10),
-      defaultValue: 'USD'
-    },
-    PaymentMethod: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    PaymentDetails: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
-    Status: {
-      type: DataTypes.STRING(20),
-      defaultValue: 'pending',
-      validate: {
-        isIn: [['pending', 'processing', 'paid', 'failed']]
-      }
-    },
-    PaymentReference: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    CreatedAt: { 
-      type: DataTypes.DATE,
-      defaultValue: sequelize.fn('GETDATE')
-    },
-    ProcessedAt: {
-      type: DataTypes.DATE,
-      allowNull: true
-    },
-    PaidAt: {
-      type: DataTypes.DATE,
-      allowNull: true
+  class RevenueShare extends Model {
+    static associate(models) {
+      RevenueShare.belongsTo(models.Course, {
+        foreignKey: 'CourseID',
+        as: 'Course',
+      });
+
+      RevenueShare.belongsTo(models.User, {
+        foreignKey: 'InstructorID',
+        as: 'Instructor',
+      });
     }
-  }, {
-    tableName: "RevenueShares",
-    timestamps: false,
-    indexes: [
-      {
-        name: 'IX_RevenueShares_CourseID',
-        fields: ['CourseID']
+  }
+
+  RevenueShare.init(
+    {
+      ShareID: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
       },
-      {
-        name: 'IX_RevenueShares_InstructorID',
-        fields: ['InstructorID']
+      CourseID: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Courses',
+          key: 'CourseID',
+        },
       },
-      {
-        name: 'IX_RevenueShares_TransactionID',
-        fields: ['TransactionID']
+      InstructorID: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Users',
+          key: 'UserID',
+        },
       },
-      {
-        name: 'IX_RevenueShares_Status',
-        fields: ['Status']
-      }
-    ],
-    hooks: {
-      afterUpdate: async (share, options) => {
-        if(share.changed('Status') && share.Status === 'paid') {
-          // Tạo thông báo cho giảng viên
-          await sequelize.models.Notification.create({
-            UserID: share.InstructorID,
-            Title: 'Revenue Share Payment',
-            Message: `Your revenue share payment of ${share.Amount} ${share.Currency} has been processed`,
-            Type: 'revenue_share',
-            RelatedID: share.ShareID
-          }, { transaction: options.transaction });
-        }
-      }
-    }
-  });
+      Percentage: {
+        type: DataTypes.DECIMAL(5, 2),
+        defaultValue: 70.0,
+        allowNull: false,
+        validate: { min: 0, max: 100 },
+      },
+      EffectiveFrom: {
+        type: DataTypes.DATE,
+        defaultValue: sequelize.fn('GETDATE'),
+      },
+      EffectiveUntil: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      Status: {
+        type: DataTypes.STRING(20),
+        defaultValue: 'active',
+        validate: { isIn: [['active', 'inactive']] },
+      },
+    },
+    {
+      sequelize,
+      modelName: 'RevenueShare',
+      tableName: 'RevenueShare',
+      timestamps: false,
+      indexes: [
+        { name: 'IX_RevenueShare_CourseID', fields: ['CourseID'] },
+        { name: 'IX_RevenueShare_InstructorID', fields: ['InstructorID'] },
+        { name: 'IX_RevenueShare_Status', fields: ['Status'] },
+      ],
+      hooks: {
+        afterUpdate: async (share, options) => {
+          if (share.changed && share.changed('Status') && share.Status === 'active') {
+            // create notification for instructor using existing Notifications schema
+            await sequelize.models.Notification.create(
+              {
+                UserID: share.InstructorID,
+                Type: 'payment',
+                Title: 'Revenue Share Updated',
+                Message: `Your revenue share for course ${share.CourseID} is now ${share.Status}`,
+                ReferenceType: 'revenue_share',
+                ReferenceID: share.ShareID,
+              },
+              { transaction: options.transaction },
+            );
+          }
+        },
+      },
+    },
+  );
   return RevenueShare;
 };
