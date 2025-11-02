@@ -72,7 +72,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         defaultValue: sequelize.fn('GETDATE'),
       },
-      UpdatedAt: {
+      LastModifiedAt: {
         type: DataTypes.DATE,
         defaultValue: sequelize.fn('GETDATE'),
       },
@@ -91,6 +91,9 @@ module.exports = (sequelize, DataTypes) => {
               .replace(/-+/g, '-')
               .replace(/^-|-$/g, '');
           }
+          if (!category.LastModifiedAt) {
+            category.LastModifiedAt = new Date();
+          }
         },
         beforeUpdate: category => {
           if (category.changed('Name') && !category.changed('Slug')) {
@@ -100,7 +103,7 @@ module.exports = (sequelize, DataTypes) => {
               .replace(/-+/g, '-')
               .replace(/^-|-$/g, '');
           }
-          category.UpdatedAt = new Date();
+          category.LastModifiedAt = new Date();
         },
       },
       indexes: [

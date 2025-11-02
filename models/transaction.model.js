@@ -101,7 +101,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       Currency: {
         type: DataTypes.STRING(3),
-        defaultValue: 'USD',
+        defaultValue: 'VND',
       },
       Status: {
         type: DataTypes.STRING(20),

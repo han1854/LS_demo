@@ -34,32 +34,55 @@ const sanitizeHTML = str => {
 };
 
 // Validation middlewares
-const validateCategory = (req, res, next) => {
+const validateCategory = async (req, res, next) => {
   const errors = {};
 
-  if (isEmpty(req.body.Name)) {
-    errors.Name = 'Tên danh mục không được để trống';
-  } else if (typeof req.body.Name === 'string' && req.body.Name.trim().length < 2) {
-    errors.Name = 'Tên danh mục phải có ít nhất 2 ký tự';
+  // Accept both PascalCase and camelCase
+  const name = (req.body.Name || req.body.name || '').trim();
+  const parentId = req.body.ParentID || req.body.parentId;
+  const status = req.body.Status || req.body.status;
+
+  if (!name) {
+    errors.name = 'Tên danh mục không được để trống';
+  } else if (name.length < 2) {
+    errors.name = 'Tên danh mục phải có ít nhất 2 ký tự';
   }
 
-  if (req.body.ParentID !== undefined && req.body.ParentID !== null) {
-    const pid = parseInt(req.body.ParentID, 10);
+  if (parentId !== undefined && parentId !== null) {
+    const pid = parseInt(parentId, 10);
     if (isNaN(pid) || pid <= 0) {
-      errors.ParentID = 'ID danh mục cha không hợp lệ';
+      errors.parentId = 'ID danh mục cha không hợp lệ';
+    } else {
+      try {
+        const Category = require('../models').Category;
+        const parentExists = await Category.findByPk(pid);
+        if (!parentExists) {
+          errors.parentId = 'Danh mục cha không tồn tại';
+        }
+      } catch (error) {
+        console.error('Error checking parent category:', error);
+      }
     }
-    // Note: Existence check against DB is omitted here to avoid circular requires.
   }
 
-  if (req.body.Status !== undefined) {
-    if (!['active', 'inactive'].includes(req.body.Status)) {
-      errors.Status = 'Trạng thái không hợp lệ';
-    }
+  if (status !== undefined && !['active', 'inactive'].includes(status)) {
+    errors.status = 'Trạng thái không hợp lệ';
   }
 
   if (Object.keys(errors).length > 0) {
-    return res.status(400).json({ success: false, errors });
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Dữ liệu không hợp lệ',
+      errors 
+    });
   }
+
+  // Store normalized data for the controller
+  req.validatedData = {
+    Name: name,
+    ParentID: parentId,
+    Status: status || 'active'
+  };
 
   next();
 };

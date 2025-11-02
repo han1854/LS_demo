@@ -49,8 +49,20 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(20),
         defaultValue: 'active',
         validate: {
-          isIn: [['active', 'completed', 'dropped']],
+          isIn: [['active', 'completed', 'cancelled']],
         },
+      },
+      CompletedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      ExpiresAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      Notes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
       },
     },
     {

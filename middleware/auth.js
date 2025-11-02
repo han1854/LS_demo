@@ -27,6 +27,10 @@ const checkRole =
       return res.status(401).json({ message: 'Unauthorized' });
     }
     const userRole = req.user.role || 'student';
+    // Admin luôn có quyền truy cập
+    if (userRole === 'admin') {
+      return next();
+    }
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({ message: 'Forbidden: insufficient role' });
     }

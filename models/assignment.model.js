@@ -75,10 +75,15 @@ module.exports = (sequelize, DataTypes) => {
       },
       Status: {
         type: DataTypes.STRING(20),
-        defaultValue: 'active',
+        defaultValue: 'draft',
         validate: {
-          isIn: [['active', 'archived']],
+          isIn: [['draft', 'published', 'archived']],
         },
+      },
+      RubricData: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Rubric data in JSON format',
       },
       CreatedAt: {
         type: DataTypes.DATE,

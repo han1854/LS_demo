@@ -40,6 +40,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
+      IsPreview: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
       Status: {
         type: DataTypes.STRING(20),
         allowNull: false,

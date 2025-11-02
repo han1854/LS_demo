@@ -1,16 +1,69 @@
 const db = require('../models');
 const Category = db.Category;
 
+const generateSlug = (name) => {
+  return String(name)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+};
+
+const validateCategory = async (data) => {
+  const errors = [];
+  if (!data.Name || String(data.Name).trim() === '') {
+    errors.push('Tên danh mục là bắt buộc');
+  }
+  if (data.ParentID) {
+    const parentExists = await Category.findByPk(data.ParentID);
+    if (!parentExists) {
+      errors.push('Danh mục cha không tồn tại');
+    }
+  }
+  return errors;
+};
+
 exports.create = async (req, res) => {
   try {
+    // Accept both PascalCase and camelCase from clients
+    const data = {
+      Name: (req.body.Name || req.body.name || '').trim(),
+      Description: req.body.Description || req.body.description || null,
+      ParentID: req.body.ParentID || req.body.parentId || null,
+      Status: req.body.Status || req.body.status || 'active'
+    };
 
-    const { Name, Description, ParentID } = req.body;
+    // Validate
+    const errors = await validateCategory(data);
+    if (errors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Dữ liệu không hợp lệ',
+        errors: errors
+      });
+    }
+
+    // Generate slug and ensure uniqueness
+    let baseSlug = generateSlug(data.Name);
+    let slug = baseSlug;
+    let counter = 1;
+    
+    while (true) {
+      const existingCategory = await Category.findOne({ where: { Slug: slug } });
+      if (!existingCategory) break;
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
 
     const category = await Category.create({
-      Name,
-      Slug: null, // Để hook tự động sinh Slug
-      Description,
-      ParentID: ParentID || null,
+      Name: data.Name,
+      Slug: slug,
+      Description: data.Description,
+      ParentID: data.ParentID,
+      Status: data.Status
     });
 
     res.status(201).json({
@@ -23,7 +76,8 @@ exports.create = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Lỗi khi tạo danh mục',
-      error: error.message,
+      error: error.message || error.toString(),
+      details: error.stack
     });
   }
 };
