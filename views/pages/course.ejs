@@ -1,0 +1,25 @@
+<%- include('../partials/header', { title: course.title }) %>
+
+<div class="container">
+  <h1><%= course.title %></h1>
+  <p class="small"><%= course.description %></p>
+
+  <div class="notice">
+    <i class="bi bi-info-circle"></i>
+    Giảng viên: <strong><%= course.instructor %></strong>
+  </div>
+
+  <div class="grid">
+    <% lessons.forEach(lesson => { %>
+      <div class="card">
+        <h4><%= lesson.title %></h4>
+        <p class="small"><%= lesson.summary %></p>
+        <a href="/lesson/<%= lesson.id %>">
+          <button>Bắt đầu học</button>
+        </a>
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

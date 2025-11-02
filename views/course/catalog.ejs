@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khóa học - LearnSpace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *{box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial,sans-serif}
+    body{margin:0;background:#f9fafb;color:#1f2937;}
+    a{text-decoration:none;color:inherit;}
+
+    /* Header & Breadcrumb */
+    .breadcrumb{max-width:1200px;margin:1rem auto;padding:0 1rem;font-size:0.9rem;color:#6b7280;}
+    .breadcrumb a{color:#2563eb;}
+    .breadcrumb span{color:#9ca3af;}
+
+    /* Banner */
+    .banner{background:linear-gradient(135deg,#2563eb,#1e40af);color:white;text-align:center;padding:3rem 1rem;border-radius:0 0 1rem 1rem;margin-bottom:2rem;}
+    .banner h1{margin-bottom:.5rem;font-size:2rem;}
+    .banner p{opacity:.9;font-size:1.1rem;}
+
+    /* Layout */
+    .container{display:grid;grid-template-columns:260px 1fr;gap:2rem;max-width:1200px;margin:auto;padding:0 1rem;}
+    @media(max-width:900px){.container{grid-template-columns:1fr;}}
+
+    /* Sidebar */
+    .sidebar{background:white;border:1px solid #e5e7eb;border-radius:0.75rem;padding:1.5rem;box-shadow:0 2px 6px rgba(0,0,0,.04);}
+    .sidebar h3{margin-top:0;font-size:1rem;margin-bottom:1rem;color:#111827;}
+    .sidebar ul{list-style:none;padding:0;margin:0;}
+    .sidebar li{margin-bottom:0.5rem;}
+    .sidebar a{display:block;padding:0.5rem;border-radius:0.5rem;color:#374151;transition:background-color 0.2s;}
+    .sidebar a:hover,.sidebar a.active{background:#e0e7ff;color:#1e3a8a;}
+
+    .filter-section{margin-top:1.5rem;border-top:1px solid #e5e7eb;padding-top:1rem;}
+    .filter-section h3{font-size:0.95rem;margin-bottom:0.75rem;color:#374151;}
+
+    /* Course Grid */
+    .content{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;}
+    .course-card{background:white;border:1px solid #e5e7eb;border-radius:0.75rem;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.05);transition:transform .2s,box-shadow .2s;}
+    .course-card:hover{transform:translateY(-4px);box-shadow:0 4px 12px rgba(0,0,0,.08);}
+    .course-card img{width:100%;height:150px;object-fit:cover;}
+    .course-info{padding:1rem;}
+    .course-info h4{margin:0;font-size:1.05rem;color:#111827;}
+    .course-info p{font-size:0.9rem;color:#6b7280;margin-top:.4rem;min-height:40px;}
+    .course-meta{display:flex;align-items:center;gap:0.75rem;margin-top:.75rem;font-size:.9rem;color:#6b7280;}
+    .meta-item{display:flex;align-items:center;gap:0.4rem;}
+    .price{margin-left:auto;font-weight:600;color:#2563eb;}
+    .btn-view{display:inline-block;margin-top:1rem;padding:0.5rem 1rem;background:#2563eb;color:white;border-radius:0.5rem;font-size:0.9rem;font-weight:500;transition:background-color .2s;}
+    .btn-view:hover{background:#1d4ed8;}
+
+    /* States */
+    .loading-spinner,.error-message,.no-results{text-align:center;padding:2rem;color:#6b7280;}
+    .loading-spinner i,.error-message i,.no-results i{font-size:2rem;margin-bottom:1rem;display:block;}
+    .error-message{color:#dc2626;}
+  </style>
+</head>
+<body>
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a href="/">Trang chủ</a> / <span>Khóa học</span>
+  </div>
+
+  <!-- Banner -->
+  <div class="banner">
+    <h1>Khám phá thế giới học tập trực tuyến</h1>
+    <p>Nâng cao kỹ năng, phát triển bản thân cùng LearnSpace</p>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h3>Danh mục</h3>
+      <ul id="categoryList">
+        <li><a href="/courses" class="<%= (!selectedCategory) ? 'active' : '' %>">Tất cả khóa học</a></li>
+        <% if (typeof categories !== 'undefined' && Array.isArray(categories)) { %>
+          <% categories.forEach(function(cat){ %>
+            <li><a href="/courses?category=<%= cat.CategoryID %>" class="<%= (selectedCategory && selectedCategory == cat.CategoryID) ? 'active' : '' %>"><%= cat.Name %></a></li>
+          <% }); %>
+        <% } %>
+      </ul>
+
+      <div class="filter-section">
+        <h3>Lọc theo giá</h3>
+        <ul>
+          <li><a href="/courses?price=free">Miễn phí</a></li>
+          <li><a href="/courses?price=paid">Có phí</a></li>
+        </ul>
+      </div>
+
+      <div class="filter-section">
+        <h3>Sắp xếp theo</h3>
+        <ul>
+          <li><a href="/courses?sort=newest">Mới nhất</a></li>
+          <li><a href="/courses?sort=popular">Phổ biến nhất</a></li>
+          <li><a href="/courses?sort=rating">Đánh giá cao</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <div class="courses-container">
+      <div class="courses-grid" id="courseGrid">
+        <% if (typeof courses !== 'undefined' && Array.isArray(courses) && courses.length > 0) { %>
+          <% courses.forEach(function(course){ %>
+            <div class="course-card">
+              <div class="course-image">
+                <img src="<%= course.ThumbnailURL || 'https://source.unsplash.com/400x300/?learning' %>" alt="<%= course.Title %>">
+                <% if (course.isNew) { %>
+                  <span class="course-status status-new">Mới</span>
+                <% } %>
+              </div>
+              <div class="course-content">
+                <div class="course-category"><%= course.Category ? course.Category.Name : 'Khóa học' %></div>
+                <h3 class="course-title"><%= course.Title %></h3>
+                <div class="course-instructor">
+                  <img src="<%= course.Instructor ? course.Instructor.Avatar : '/static/images/default-avatar.png' %>" 
+                       alt="Instructor" class="instructor-avatar">
+                  <span><%= course.Instructor ? course.Instructor.FullName : 'Giảng viên' %></span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-meta">
+                  <div class="course-rating">
+                    <i class="fas fa-star"></i>
+                    <span><%= (course.ratings && course.ratings.length) ? 
+                      ((course.ratings.reduce((s,r)=>s+Number(r.Rating),0)/course.ratings.length).toFixed(1)) : 'N/A' %></span>
+                  </div>
+                  <div class="course-students">
+                    <i class="fas fa-users"></i>
+                    <span><%= (course.enrollments && course.enrollments.length) ? course.enrollments.length : 0 %></span>
+                  </div>
+                </div>
+                <div class="course-price">
+                  <%= course.Price && course.Price > 0 ? 
+                    new Intl.NumberFormat('vi-VN', {style:'currency', currency:'VND'}).format(course.Price) : 
+                    'Miễn phí' %>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        <% } %>
+        <% }); %>
+      <% } else { %>
+        <div class="loading-spinner">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          <span>Đang tải khóa học...</span>
+        </div>
+      <% } %>
+    </section>
+  </div>
+
+  <script>
+    // Format currency
+    const formatCurrency = amount =>
+      new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(amount);
+
+    // Render a course card
+    function renderCourseCard(course){
+      const price = course.price>0 ? formatCurrency(course.price):'Miễn phí';
+      const thumbnail = course.thumbnail || 'https://source.unsplash.com/400x250/?coding';
+      const rating = Number(course.rating || 0).toFixed(1);
+      const enrollments = course.enrollmentCount || 0;
+      return `
+        <div class="course-card">
+          <img src="${thumbnail}" alt="${course.title}">
+          <div class="course-info">
+            <h4>${course.title}</h4>
+            <p>${course.shortDescription || ''}</p>
+            <div class="course-meta">
+              <div class="meta-item"><i class="fa-solid fa-users"></i>${enrollments}</div>
+              <div class="meta-item"><i class="fa-solid fa-star"></i>${rating}</div>
+              <div class="price">${price}</div>
+            </div>
+            <a href="/course/${course.id}" class="btn-view">Xem khóa học</a>
+          </div>
+        </div>`;
+    }
+
+    // Load courses (demo data)
+    async function loadCourses(){
+      const grid=document.getElementById('courseGrid');
+      grid.innerHTML='<div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</div>';
+      try{
+        const res=await fetch('/api/courses');
+        const data=await res.json();
+        if(!Array.isArray(data) || !data.length){
+          grid.innerHTML='<div class="no-results"><i class="fa-solid fa-search"></i>Không tìm thấy khóa học nào.</div>';
+          return;
+        }
+        grid.innerHTML=data.map(renderCourseCard).join('');
+      }catch(e){
+        grid.innerHTML='<div class="error-message"><i class="fa-solid fa-triangle-exclamation"></i>Không thể tải khóa học.</div>';
+      }
+    }
+    document.addEventListener('DOMContentLoaded',loadCourses);
+  </script>
+</body>
+</html>

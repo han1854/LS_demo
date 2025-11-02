@@ -1,0 +1,11 @@
+<nav class="guest-nav">
+  <a href="/" class="nav-item <%= currentPath === '/' ? 'active' : '' %>">Trang chủ</a>
+  <a href="/courses" class="nav-item <%= currentPath && currentPath.startsWith('/courses') ? 'active' : '' %>">Khóa học</a>
+  <a href="/blog" class="nav-item <%= currentPath === '/blog' ? 'active' : '' %>">Blog</a>
+  <a href="/contact" class="nav-item <%= currentPath === '/contact' ? 'active' : '' %>">Liên hệ</a>
+
+  <div class="auth-actions" style="margin-left:auto">
+    <a href="/login" class="btn btn-text">Đăng nhập</a>
+    <a href="/register" class="btn btn-primary">Đăng ký</a>
+  </div>
+</nav>

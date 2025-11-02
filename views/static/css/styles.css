@@ -1,0 +1,138 @@
+/* --- Tổng thể --- */
+body {
+  font-family: "Inter", sans-serif;
+  background: #f9fafb;
+  margin: 0;
+  color: #1f2937;
+}
+a { text-decoration: none; color: inherit; }
+
+/* --- Header --- */
+header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+header .logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+nav a {
+  margin: 0 1rem;
+  color: #374151;
+  font-weight: 500;
+}
+nav a:hover {
+  color: #2563eb;
+}
+
+/* --- Breadcrumb --- */
+.breadcrumb {
+  background: #f3f4f6;
+  padding: 0.75rem 2rem;
+  font-size: 0.9rem;
+}
+.breadcrumb a { color: #2563eb; }
+
+/* --- Banner --- */
+.banner {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white;
+  text-align: center;
+  padding: 3rem 1rem;
+  border-radius: 0 0 1.5rem 1.5rem;
+}
+.banner h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* --- Layout chính --- */
+.container {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1280px;
+  margin: auto;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+  background: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.sidebar h3 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar li {
+  margin-bottom: 0.75rem;
+}
+.sidebar a {
+  color: #374151;
+  font-weight: 500;
+}
+.sidebar a:hover {
+  color: #2563eb;
+}
+
+/* --- Content (Courses) --- */
+.content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+.course-card {
+  background: white;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+.course-card:hover {
+  transform: translateY(-5px);
+}
+.course-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+.course-info {
+  padding: 1rem;
+}
+.course-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.course-info p {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* --- Footer --- */
+footer {
+  background: #111827;
+  color: #9ca3af;
+  text-align: center;
+  padding: 2rem;
+  margin-top: 2rem;
+  border-radius: 1.5rem 1.5rem 0 0;
+}

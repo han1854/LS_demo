@@ -1,0 +1,106 @@
+<%- include('../partials/head', { title: 'Đăng ký' }) %>
+<%- include('../partials/guest-nav') %>
+
+<div class="auth-container">
+    <div class="auth-header text-center">
+        <h2>Create Account</h2>
+        <p>Join our learning community</p>
+    </div>
+
+    <form id="registerForm" class="form">
+        <div class="form-group">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required minlength="8">
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <input type="password" id="confirmPassword" required>
+        </div>
+
+        <div class="form-group">
+            <label>I want to:</label>
+            <div class="role-select">
+                <div class="role-option" data-role="student">
+                    <h4>Learn</h4>
+                    <small>Take courses</small>
+                </div>
+                <div class="role-option" data-role="instructor">
+                    <h4>Teach</h4>
+                    <small>Create courses</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <button type="submit" class="btn w-100">Create Account</button>
+    </form>
+
+    <div class="auth-links text-center">
+        <p>Already have an account? <a href="/login">Login</a></p>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+const roleOptions = document.querySelectorAll('.role-option');
+let selectedRole = 'student';
+
+// Chọn mặc định "student"
+document.querySelector('[data-role="student"]').classList.add('selected');
+
+roleOptions.forEach(option => {
+    option.addEventListener('click', () => {
+        roleOptions.forEach(opt => opt.classList.remove('selected'));
+        option.classList.add('selected');
+        selectedRole = option.dataset.role;
+    });
+});
+
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const errorMessage = document.getElementById('errorMessage');
+    errorMessage.style.display = 'none';
+    
+    const password = document.getElementById('password').value.trim();
+    const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+    if (password !== confirmPassword) {
+        errorMessage.textContent = 'Passwords do not match';
+        errorMessage.style.display = 'block';
+        return;
+    }
+
+    try {
+        const response = await Api.fetchWithAuth('/api/users/register', 'POST', null, {
+            FullName: document.getElementById('fullName').value.trim(),
+            Email: document.getElementById('email').value.trim(),
+            Password: password,
+            Role: selectedRole
+        });
+
+        if (response.token) {
+            Auth.setToken(response.token);
+            Auth.setUser(response.user);
+            window.location.href = '/dashboard';
+        } else {
+            throw new Error('Invalid response');
+        }
+    } catch (err) {
+        errorMessage.textContent = err.body?.message || 'Registration failed. Please try again.';
+        errorMessage.style.display = 'block';
+    }
+});
+</script>

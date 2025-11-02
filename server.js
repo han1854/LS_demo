@@ -3,6 +3,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const path = require('path');
+const ejs = require('ejs');
 const db = require('./models');
 const {
   limiter,
@@ -15,6 +17,26 @@ const {
 } = require('./middleware/security');
 
 const app = express();
+
+// View engine setup
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// Global template locals defaults to avoid EJS ReferenceError when a view
+// expects variables that aren't provided by a route. These can be overridden
+// per-route by setting res.locals or passing values to res.render.
+app.use((req, res, next) => {
+  // req.user may be attached by auth middleware for protected routes
+  res.locals.currentUser = res.locals.currentUser || req.user || null;
+  res.locals.currentPath = res.locals.currentPath || req.path || '';
+  // Common view variables with safe fallbacks
+  res.locals.notificationCount = typeof res.locals.notificationCount !== 'undefined' ? res.locals.notificationCount : 0;
+  res.locals.selectedCategory = typeof res.locals.selectedCategory !== 'undefined' ? res.locals.selectedCategory : null;
+  res.locals.progressPercentage = typeof res.locals.progressPercentage !== 'undefined' ? res.locals.progressPercentage : 0;
+  res.locals.pageStyles = res.locals.pageStyles || [];
+  res.locals.pageScripts = res.locals.pageScripts || [];
+  next();
+});
 
 // Secure cookie settings
 app.use(cookieParser());
@@ -38,6 +60,56 @@ app.use(limiter); // Rate limiting cho toàn bộ server
 app.use(bodyParser.json({ limit: '10kb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10kb' }));
 
+// Serve static files with security headers
+app.use('/static', express.static('views/static', {
+  setHeaders: (res, path) => {
+    if (path.match(/\.(css|js|png|jpg|jpeg|gif|ico)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
+      res.setHeader('Content-Security-Policy', 
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " + 
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; " +
+        "font-src 'self' https://fonts.gstatic.com; " +
+        "img-src 'self' data: https:; " +
+        "connect-src 'self'"
+      );
+    }
+  }
+}));
+
+// Serve files from public directory
+app.use('/public', express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, path) => {
+    if (path.match(/\.(css|js|png|jpg|jpeg|gif|ico)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
+    }
+  }
+}));
+
+// Serve static files from public directory
+app.use('/public', express.static('public', {
+  setHeaders: (res, path) => {
+    if (path.match(/\.(css|js|png|jpg|jpeg|gif|ico)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
+      res.setHeader('Content-Security-Policy', 
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline'; " + 
+        "style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data: https:; " +
+        "connect-src 'self'"
+      );
+    }
+  }
+}));
+
+// Serve uploaded files from public directory
+app.use('/uploads', express.static('public/uploads', {
+  setHeaders: (res, path) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Content-Security-Policy', "default-src 'self';");
+  }
+}));
+
 // API Security cho tất cả route /api
 app.use('/api', apiSecurity);
 
@@ -50,15 +122,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Root route with security headers
-app.get('/', (req, res) => {
-  res.set({
-    'Content-Security-Policy': "default-src 'self'",
-    'X-Frame-Options': 'DENY',
-    'X-Content-Type-Options': 'nosniff',
-  });
-  res.send('Website Học Tập - LS Backend');
-});
+// View routes
+const viewRoutes = require('./routes/view.routes');
+app.use('/', viewRoutes);
 
 // Import routes
 const userRoutes = require('./routes/user.routes');
@@ -100,7 +166,10 @@ app.use(
   userRoutes,
 );
 
-app.use('/api/courses', validateTokenFormat, apiLimiter, courseRoutes);
+const { requireAuthUnlessGet } = require('./middleware/security');
+
+// Allow public GETs to courses (list/detail) but require auth for writes
+app.use('/api/courses', requireAuthUnlessGet, apiLimiter, courseRoutes);
 app.use('/api/lessons', validateTokenFormat, apiLimiter, lessonRoutes);
 app.use('/api/enrollments', validateTokenFormat, apiLimiter, enrollRoutes);
 app.use('/api/assignments', validateTokenFormat, apiLimiter, assignmentRoutes);

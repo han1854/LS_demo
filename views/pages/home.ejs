@@ -1,0 +1,31 @@
+<%- include('../partials/header', { title: title || "LearnSpace" }) %>
+
+<!-- Breadcrumb -->
+<%- include('../partials/breadcrumb', { currentPage: "Khóa học" }) %>
+
+<!-- Banner -->
+<div class="banner">
+  <h1>Khám phá thế giới học tập trực tuyến</h1>
+  <p>Nâng cao kỹ năng, phát triển bản thân cùng LearnSpace</p>
+</div>
+
+<!-- Main Layout -->
+<div class="container">
+  <!-- Sidebar -->
+  <%- include('../partials/sidebar', { categories }) %>
+
+  <!-- Content -->
+  <section class="content">
+    <% courses.forEach((course, i) => { %>
+      <div class="course-card">
+        <img src="<%= course.image %>" alt="<%= course.title %>">
+        <div class="course-info">
+          <h4><%= course.title %></h4>
+          <p><%= course.description %></p>
+        </div>
+      </div>
+    <% }) %>
+  </section>
+</div>
+
+<%- include('../partials/footer') %>

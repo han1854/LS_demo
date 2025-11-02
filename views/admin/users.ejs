@@ -1,0 +1,153 @@
+<%- include('../../partials/head', { title: 'Quản lý người dùng' }) %>
+<%- include('../../partials/admin-nav') %>
+
+<main class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Quản lý người dùng</h2>
+        <button class="btn btn-primary" id="btnAddUser"><i class="fa fa-plus"></i> Thêm người dùng</button>
+    </div>
+
+    <div class="input-group mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Tìm theo tên hoặc email...">
+        <button class="btn btn-outline-secondary" id="btnSearch">Tìm</button>
+    </div>
+
+    <div class="table-responsive shadow-sm rounded bg-white p-3">
+        <table class="table table-hover align-middle text-center">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Vai trò</th>
+                    <th>Ngày tạo</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                <!-- Dữ liệu load bằng JS -->
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<!-- Modal -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-3 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalTitle">Thêm người dùng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <input type="hidden" id="userId">
+
+                    <div class="mb-3">
+                        <label class="form-label">Họ tên</label>
+                        <input type="text" id="fullName" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="email" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Vai trò</label>
+                        <select id="role" class="form-select" required>
+                            <option value="student">Học viên</option>
+                            <option value="instructor">Giảng viên</option>
+                            <option value="admin">Quản trị</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnSaveUser">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../../partials/footer') %>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const modal = new bootstrap.Modal(document.getElementById("userModal"));
+    const userTableBody = document.getElementById("userTableBody");
+    const btnAddUser = document.getElementById("btnAddUser");
+    const btnSaveUser = document.getElementById("btnSaveUser");
+    let users = [];
+    let editingUserId = null;
+
+    // Fake API call (bạn thay bằng fetch từ server thật)
+    async function loadUsers() {
+        users = [
+            { id: 1, name: "Nguyễn Văn A", email: "a@gmail.com", role: "student", createdAt: "2024-05-01" },
+            { id: 2, name: "Trần Thị B", email: "b@gmail.com", role: "instructor", createdAt: "2024-06-10" }
+        ];
+        renderUsers(users);
+    }
+
+    function renderUsers(data) {
+        userTableBody.innerHTML = data.map((u, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${u.name}</td>
+                <td>${u.email}</td>
+                <td><span class="badge bg-${u.role === 'admin' ? 'danger' : (u.role === 'instructor' ? 'warning' : 'secondary')} text-dark">${u.role}</span></td>
+                <td>${u.createdAt}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="editUser(${u.id})"><i class="fa fa-edit"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${u.id})"><i class="fa fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    btnAddUser.addEventListener("click", () => {
+        editingUserId = null;
+        document.getElementById("modalTitle").textContent = "Thêm người dùng";
+        document.getElementById("userForm").reset();
+        modal.show();
+    });
+
+    btnSaveUser.addEventListener("click", () => {
+        const name = document.getElementById("fullName").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const role = document.getElementById("role").value;
+
+        if (!name || !email) return alert("Vui lòng nhập đủ thông tin!");
+
+        if (editingUserId) {
+            const user = users.find(u => u.id === editingUserId);
+            user.name = name; user.email = email; user.role = role;
+        } else {
+            users.push({ id: Date.now(), name, email, role, createdAt: new Date().toISOString().split('T')[0] });
+        }
+        renderUsers(users);
+        modal.hide();
+    });
+
+    window.editUser = (id) => {
+        editingUserId = id;
+        const u = users.find(x => x.id === id);
+        document.getElementById("modalTitle").textContent = "Sửa người dùng";
+        document.getElementById("fullName").value = u.name;
+        document.getElementById("email").value = u.email;
+        document.getElementById("role").value = u.role;
+        modal.show();
+    };
+
+    window.deleteUser = (id) => {
+        if (confirm("Bạn có chắc muốn xóa?")) {
+            users = users.filter(u => u.id !== id);
+            renderUsers(users);
+        }
+    };
+
+    loadUsers();
+});
+</script>

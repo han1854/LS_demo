@@ -1,0 +1,228 @@
+<%- include('partials/head', { title: 'LearnSpace - Online Learning Platform' }) %>
+<%- include('partials/guest-nav') %>
+
+<!-- Hero Section -->
+<section class="hero-section text-center text-light d-flex align-items-center justify-content-center">
+  <div class="container">
+    <h1 class="display-4 fw-bold mb-3">Learn Without Limits</h1>
+    <p class="lead mb-4">
+      Build skills with online courses, certificates, and degrees from world-class instructors.
+    </p>
+    <div>
+      <a href="/catalog" class="btn btn-primary me-3">Browse Courses</a>
+      <a href="/register" class="btn btn-outline-light">Join For Free</a>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Categories -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <h2 class="text-center mb-4 fw-semibold">Featured Categories</h2>
+    <div class="row g-4" id="featuredCategories">
+      <% if (typeof categories !== 'undefined' && Array.isArray(categories) && categories.length > 0) { %>
+        <% categories.forEach(function(cat){ %>
+          <div class="col-md-3">
+            <div class="card shadow-sm border-0 rounded-4 text-center p-4 h-100">
+              <h5><%= cat.Name %></h5>
+              <p class="text-muted small"><%= cat.Description || '' %></p>
+              <a href="/catalog?category=<%= cat.CategoryID %>" class="btn btn-outline-primary btn-sm mt-auto">View Courses</a>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <!-- Categories will be loaded dynamically -->
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<!-- Popular Courses -->
+<section class="py-5">
+  <div class="container">
+    <h2 class="text-center mb-4 fw-semibold">Popular Courses</h2>
+    <div class="row g-4" id="popularCourses">
+      <% if (typeof featuredCourses !== 'undefined' && Array.isArray(featuredCourses) && featuredCourses.length > 0) { %>
+        <% featuredCourses.forEach(function(course){ %>
+          <div class="col-md-4 col-lg-3">
+            <div class="course-card card border-0 shadow-sm rounded-4 h-100">
+              <img src="<%= course.ThumbnailURL || '/static/images/course-default.jpg' %>" class="card-img-top rounded-top-4" alt="<%= course.Title %>">
+              <div class="card-body">
+                <h6 class="fw-semibold"><%= course.Title %></h6>
+                <div class="text-muted small mb-2"><%= (course.instructor && course.instructor.FirstName) ? (course.instructor.FirstName + ' ' + (course.instructor.LastName || '')) : '' %></div>
+                <div class="d-flex justify-content-between text-muted small">
+                  <span>⭐ <%= (course.ratings && course.ratings.length) ? ( (course.ratings.reduce((s,r)=>s+Number(r.Rating),0)/course.ratings.length).toFixed(1) ) : 'New' %></span>
+                  <span>👥 <%= (course.enrollments && course.enrollments.length) ? course.enrollments.length : 0 %> students</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <!-- Courses will be loaded dynamically -->
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<!-- Why Choose LearnSpace -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <h2 class="text-center mb-5 fw-semibold">Why Choose LearnSpace</h2>
+    <div class="row g-4 text-center">
+      <div class="col-md-3">
+        <div class="feature-card p-4 shadow-sm rounded-4">
+          <i class="fas fa-graduation-cap fa-2x mb-3 text-primary"></i>
+          <h5>Expert Instructors</h5>
+          <p class="text-muted small">Learn from passionate professionals with real-world experience.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card p-4 shadow-sm rounded-4">
+          <i class="fas fa-certificate fa-2x mb-3 text-primary"></i>
+          <h5>Certificates</h5>
+          <p class="text-muted small">Earn verified certificates to boost your career opportunities.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card p-4 shadow-sm rounded-4">
+          <i class="fas fa-clock fa-2x mb-3 text-primary"></i>
+          <h5>Flexible Learning</h5>
+          <p class="text-muted small">Access course content anytime, anywhere at your own pace.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card p-4 shadow-sm rounded-4">
+          <i class="fas fa-users fa-2x mb-3 text-primary"></i>
+          <h5>Vibrant Community</h5>
+          <p class="text-muted small">Join a growing network of global learners and educators.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="py-5">
+  <div class="container">
+    <h2 class="text-center mb-5 fw-semibold">What Our Students Say</h2>
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="testimonial-card p-4 shadow-sm rounded-4">
+          <p class="text-muted">
+            “LearnSpace helped me switch careers into web development. The courses were comprehensive and easy to follow.”
+          </p>
+          <div class="d-flex align-items-center mt-3">
+            <img src="/static/images/testimonial1.jpg" class="rounded-circle me-3" width="60" height="60" />
+            <div>
+              <strong>John Doe</strong>
+              <div class="text-muted small">Web Developer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="testimonial-card p-4 shadow-sm rounded-4">
+          <p class="text-muted">
+            “The quality of teaching is excellent. I’ve gained valuable skills in data science through LearnSpace.”
+          </p>
+          <div class="d-flex align-items-center mt-3">
+            <img src="/static/images/testimonial2.jpg" class="rounded-circle me-3" width="60" height="60" />
+            <div>
+              <strong>Jane Smith</strong>
+              <div class="text-muted small">Data Scientist</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
+
+<!-- JavaScript -->
+<script>
+  // Toggle user buttons based on authentication
+  const token = Auth.getToken();
+  const user = Auth.getUser();
+
+  if (token && user) {
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('registerBtn').style.display = 'none';
+    document.getElementById('dashboardBtn').style.display = 'inline';
+  }
+
+  // Load Categories
+  async function loadCategories() {
+    try {
+      const res = await Api.fetchWithAuth('/api/categories');
+      const categories = res.data || res;
+      const html = categories.map(cat => `
+        <div class="col-md-3">
+          <div class="card shadow-sm border-0 rounded-4 text-center p-4 h-100">
+            <h5>${cat.Name}</h5>
+            <p class="text-muted small">${cat.Description || ''}</p>
+            <a href="/catalog?category=${cat.CategoryID}" class="btn btn-outline-primary btn-sm mt-auto">View Courses</a>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('featuredCategories').innerHTML = html;
+    } catch (err) {
+      console.error('Failed to load categories:', err);
+    }
+  }
+
+  // Load Popular Courses
+  async function loadPopularCourses() {
+    try {
+      const res = await Api.fetchWithAuth('/api/courses?featured=true');
+      const courses = res.data || res;
+      const html = courses.map(course => `
+        <div class="col-md-4 col-lg-3">
+          <div class="course-card card border-0 shadow-sm rounded-4 h-100">
+            <img src="${course.ThumbnailURL || '/images/course-default.jpg'}" class="card-img-top rounded-top-4" alt="${course.Title}">
+            <div class="card-body">
+              <h6 class="fw-semibold">${course.Title}</h6>
+              <div class="text-muted small mb-2">${course.InstructorName}</div>
+              <div class="d-flex justify-content-between text-muted small">
+                <span>⭐ ${course.Rating || 'New'}</span>
+                <span>👥 ${course.EnrollmentCount || 0} students</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('popularCourses').innerHTML = html;
+    } catch (err) {
+      console.error('Failed to load popular courses:', err);
+    }
+  }
+
+  loadCategories();
+  loadPopularCourses();
+</script>
+
+<style>
+  .hero-section {
+    background: linear-gradient(120deg, #6a11cb, #2575fc);
+    color: white;
+    padding: 120px 20px;
+  }
+
+  .feature-card i {
+    color: #6a11cb;
+  }
+
+  .testimonial-card {
+    background: #fff;
+    border: 1px solid #eee;
+    transition: 0.3s;
+  }
+
+  .testimonial-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+</style>

@@ -1,0 +1,126 @@
+<%- include('../../partials/head', { title: 'Quản lý loại khóa học' }) %>
+<%- include('../../partials/admin-nav') %>
+
+<main class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Quản lý loại khóa học</h2>
+        <button class="btn btn-primary" id="btnAddCategory"><i class="fa fa-plus"></i> Thêm loại</button>
+    </div>
+
+    <div class="table-responsive shadow-sm rounded bg-white p-3">
+        <table class="table table-hover align-middle text-center">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Tên loại</th>
+                    <th>Mô tả</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="categoryTableBody">
+                <!-- Dữ liệu load bằng JS -->
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<!-- Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-3 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="categoryModalTitle">Thêm loại</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <input type="hidden" id="categoryId">
+                    <div class="mb-3">
+                        <label class="form-label">Tên loại</label>
+                        <input type="text" id="categoryName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <textarea id="categoryDesc" class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnSaveCategory">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../../partials/footer') %>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const modal = new bootstrap.Modal(document.getElementById("categoryModal"));
+    const tbody = document.getElementById("categoryTableBody");
+    const btnAdd = document.getElementById("btnAddCategory");
+    const btnSave = document.getElementById("btnSaveCategory");
+    let categories = [];
+    let editingId = null;
+
+    function renderCategories() {
+        tbody.innerHTML = categories.map((c, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${c.name}</td>
+                <td>${c.desc || '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="editCategory(${c.id})"><i class="fa fa-edit"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${c.id})"><i class="fa fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    btnAdd.addEventListener("click", () => {
+        editingId = null;
+        document.getElementById("categoryForm").reset();
+        document.getElementById("categoryModalTitle").textContent = "Thêm loại";
+        modal.show();
+    });
+
+    btnSave.addEventListener("click", () => {
+        const name = document.getElementById("categoryName").value.trim();
+        const desc = document.getElementById("categoryDesc").value.trim();
+        if (!name) return alert("Vui lòng nhập tên loại!");
+
+        if (editingId) {
+            const c = categories.find(x => x.id === editingId);
+            c.name = name; c.desc = desc;
+        } else {
+            categories.push({ id: Date.now(), name, desc });
+        }
+        renderCategories();
+        modal.hide();
+    });
+
+    window.editCategory = (id) => {
+        editingId = id;
+        const c = categories.find(x => x.id === id);
+        document.getElementById("categoryName").value = c.name;
+        document.getElementById("categoryDesc").value = c.desc;
+        document.getElementById("categoryModalTitle").textContent = "Sửa loại";
+        modal.show();
+    };
+
+    window.deleteCategory = (id) => {
+        if (confirm("Bạn có chắc muốn xóa loại này?")) {
+            categories = categories.filter(c => c.id !== id);
+            renderCategories();
+        }
+    };
+
+    // Load thử dữ liệu
+    categories = [
+        { id: 1, name: "Web Development", desc: "Khóa học lập trình web" },
+        { id: 2, name: "Data Science", desc: "Phân tích dữ liệu và AI" }
+    ];
+    renderCategories();
+});
+</script>

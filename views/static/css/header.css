@@ -1,0 +1,73 @@
+/* header.css — Navbar & Profile */
+
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+.auth-buttons .btn-text {
+  color: var(--text-primary);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.auth-buttons .btn-text:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+  opacity: 0.15;
+}
+
+.auth-buttons .btn-primary {
+  background: var(--primary);
+  color: white;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+}
+
+.my-courses {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.my-courses:hover {
+  color: var(--primary);
+}
+
+.profile-toggle {
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+}
+
+.profile-toggle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}

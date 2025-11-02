@@ -1,0 +1,291 @@
+<%- include('../partials/head', { title: 'Lesson Management - Instructor Dashboard' }) %>
+<%- include('../partials/instructor-nav') %>
+
+<div class="content-grid">
+  <div class="sidebar">
+    <h3>Course Content</h3>
+    <button onclick="addSection()" class="btn" style="width:100%;margin:1rem 0">Add Section</button>
+    <div id="curriculumList"></div>
+  </div>
+
+  <div class="main-content">
+    <div id="editorView" style="display:none">
+      <div class="content-header">
+        <h2 id="editorTitle">Edit Lesson</h2>
+        <div>
+          <button onclick="saveContent()" class="btn">Save</button>
+          <button onclick="previewContent()" class="btn">Preview</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="lessonTitle">
+      </div>
+
+      <div class="form-group">
+        <label>Content Type</label>
+        <select id="contentType" onchange="updateEditor()">
+          <option value="text">Text/Article</option>
+          <option value="video">Video</option>
+          <option value="quiz">Quiz</option>
+          <option value="assignment">Assignment</option>
+        </select>
+      </div>
+
+      <!-- Text Editor -->
+      <div id="textEditor" class="editor-container">
+        <div class="editor-toolbar">
+          <button onclick="formatText('bold')" class="btn">B</button>
+          <button onclick="formatText('italic')" class="btn">I</button>
+          <button onclick="formatText('underline')" class="btn">U</button>
+          <button onclick="insertLink()" class="btn">Link</button>
+          <button onclick="insertImage()" class="btn">Image</button>
+        </div>
+        <div class="editor-content" id="textContent" contenteditable="true"></div>
+      </div>
+
+      <!-- Video Upload -->
+      <div id="videoEditor" style="display:none">
+        <div class="form-group">
+          <label>Video URL (YouTube/Vimeo)</label>
+          <input type="text" id="videoUrl">
+        </div>
+        <div class="form-group">
+          <label>Or Upload Video File</label>
+          <input type="file" id="videoFile" accept="video/*">
+        </div>
+      </div>
+
+      <!-- Quiz Editor -->
+      <div id="quizEditor" style="display:none">
+        <div class="form-group">
+          <label>Quiz Duration (minutes)</label>
+          <input type="number" id="quizDuration" min="1">
+        </div>
+        <div id="questionsList"></div>
+        <button onclick="addQuestion()" class="btn">Add Question</button>
+      </div>
+
+      <!-- Assignment Editor -->
+      <div id="assignmentEditor" style="display:none">
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="datetime-local" id="assignmentDue">
+        </div>
+        <div class="form-group">
+          <label>Points</label>
+          <input type="number" id="assignmentPoints" min="0">
+        </div>
+        <div class="form-group">
+          <label>Instructions</label>
+          <textarea id="assignmentInstructions" rows="4"></textarea>
+        </div>
+      </div>
+
+      <!-- Resources Section -->
+      <div class="resources-section" style="margin-top:2rem">
+        <h3>Additional Resources</h3>
+        <div id="resourcesList"></div>
+        <button onclick="addResource()" class="btn">Add Resource</button>
+      </div>
+    </div>
+
+    <div id="welcomeView">
+      <h2>Lesson Management</h2>
+      <p>Select a lesson from the sidebar to edit its content, or create a new section/lesson.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Section Modal -->
+<div id="sectionModal" class="modal">
+  <div class="modal-content">
+    <h3>New Section</h3>
+    <form id="sectionForm" class="form">
+      <div class="form-group">
+        <label>Section Title</label>
+        <input type="text" id="sectionTitle" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="sectionDesc"></textarea>
+      </div>
+      <div style="margin-top:1rem">
+        <button type="submit" class="btn">Create Section</button>
+        <button type="button" class="btn" onclick="closeSectionModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Resource Modal -->
+<div id="resourceModal" class="modal">
+  <div class="modal-content">
+    <h3>Add Resource</h3>
+    <form id="resourceForm" class="form">
+      <div class="form-group">
+        <label>Resource Title</label>
+        <input type="text" id="resourceTitle" required>
+      </div>
+      <div class="form-group">
+        <label>Resource Type</label>
+        <select id="resourceType">
+          <option value="pdf">PDF Document</option>
+          <option value="doc">Word Document</option>
+          <option value="code">Code File</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>File</label>
+        <input type="file" id="resourceFile">
+      </div>
+      <div class="form-group">
+        <label>Or External URL</label>
+        <input type="url" id="resourceUrl">
+      </div>
+      <div style="margin-top:1rem">
+        <button type="submit" class="btn">Add Resource</button>
+        <button type="button" class="btn" onclick="closeResourceModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+  // ---------------------------
+  // DỮ LIỆU GIẢ MẪU & HÀM HỖ TRỢ
+  // ---------------------------
+  let curriculum = [];
+  let currentLesson = null;
+
+  function renderCurriculum() {
+    const list = document.getElementById("curriculumList");
+    list.innerHTML = "";
+    curriculum.forEach((section, sIdx) => {
+      const sectionEl = document.createElement("div");
+      sectionEl.className = "card";
+      sectionEl.innerHTML = `
+        <h4>${section.title}</h4>
+        <p class="small">${section.description || ""}</p>
+        <button class="btn" onclick="addLesson(${sIdx})">Add Lesson</button>
+        <div class="small" style="margin-top:6px">
+          ${section.lessons.map((l, i) => `<div onclick="editLesson(${sIdx}, ${i})" style="cursor:pointer;padding:4px 0">${l.title}</div>`).join("")}
+        </div>
+      `;
+      list.appendChild(sectionEl);
+    });
+  }
+
+  function addSection() {
+    document.getElementById("sectionModal").style.display = "block";
+  }
+
+  function closeSectionModal() {
+    document.getElementById("sectionModal").style.display = "none";
+  }
+
+  document.getElementById("sectionForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = document.getElementById("sectionTitle").value;
+    const desc = document.getElementById("sectionDesc").value;
+    curriculum.push({ title, description: desc, lessons: [] });
+    renderCurriculum();
+    closeSectionModal();
+  });
+
+  function addLesson(sectionIdx) {
+    const title = prompt("Lesson title:");
+    if (!title) return;
+    curriculum[sectionIdx].lessons.push({ title, content: "" });
+    renderCurriculum();
+  }
+
+  function editLesson(sectionIdx, lessonIdx) {
+    const lesson = curriculum[sectionIdx].lessons[lessonIdx];
+    currentLesson = { sectionIdx, lessonIdx };
+    document.getElementById("editorView").style.display = "block";
+    document.getElementById("welcomeView").style.display = "none";
+    document.getElementById("lessonTitle").value = lesson.title;
+    document.getElementById("textContent").innerHTML = lesson.content;
+  }
+
+  function saveContent() {
+    if (!currentLesson) return alert("No lesson selected!");
+    const { sectionIdx, lessonIdx } = currentLesson;
+    const title = document.getElementById("lessonTitle").value;
+    const content = document.getElementById("textContent").innerHTML;
+    curriculum[sectionIdx].lessons[lessonIdx].title = title;
+    curriculum[sectionIdx].lessons[lessonIdx].content = content;
+    alert("Lesson saved!");
+    renderCurriculum();
+  }
+
+  function previewContent() {
+    const content = document.getElementById("textContent").innerHTML;
+    const w = window.open("", "_blank");
+    w.document.write("<html><body>" + content + "</body></html>");
+  }
+
+  function updateEditor() {
+    const type = document.getElementById("contentType").value;
+    ["textEditor", "videoEditor", "quizEditor", "assignmentEditor"].forEach(id => {
+      document.getElementById(id).style.display = "none";
+    });
+    document.getElementById(type + "Editor").style.display = "block";
+  }
+
+  function formatText(cmd) {
+    document.execCommand(cmd, false, null);
+  }
+
+  function insertLink() {
+    const url = prompt("Enter link URL:");
+    if (url) document.execCommand("createLink", false, url);
+  }
+
+  function insertImage() {
+    const url = prompt("Enter image URL:");
+    if (url) document.execCommand("insertImage", false, url);
+  }
+
+  function addQuestion() {
+    const container = document.getElementById("questionsList");
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <label>Question:</label>
+      <input type="text">
+      <label>Options:</label>
+      <textarea rows="3"></textarea>
+      <label>Correct Answer:</label>
+      <input type="text">
+    `;
+    container.appendChild(div);
+  }
+
+  function addResource() {
+    document.getElementById("resourceModal").style.display = "block";
+  }
+
+  function closeResourceModal() {
+    document.getElementById("resourceModal").style.display = "none";
+  }
+
+  document.getElementById("resourceForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = document.getElementById("resourceTitle").value;
+    const type = document.getElementById("resourceType").value;
+    alert("Resource added: " + title + " (" + type + ")");
+    closeResourceModal();
+  });
+
+  // Khởi tạo dữ liệu mẫu
+  curriculum = [
+    { title: "Section 1: Basics", description: "Introductory lessons", lessons: [] },
+  ];
+  renderCurriculum();
+</script>

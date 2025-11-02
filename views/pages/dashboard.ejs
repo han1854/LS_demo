@@ -1,0 +1,23 @@
+<%- include('../partials/header', { title: 'Bảng điều khiển' }) %>
+
+<div class="container">
+  <h1>Bảng điều khiển</h1>
+  <p class="small">Xin chào, <%= currentUser?.name || 'Người dùng' %>!</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Khóa học của tôi</h3>
+      <p>Bạn hiện có <strong><%= userStats.courses %></strong> khóa học đang học.</p>
+    </div>
+    <div class="card">
+      <h3>Bài kiểm tra</h3>
+      <p>Bạn đã hoàn thành <strong><%= userStats.tests %></strong> bài kiểm tra.</p>
+    </div>
+    <div class="card">
+      <h3>Tiến độ học tập</h3>
+      <p>Trung bình hoàn thành <strong><%= userStats.progress %>%</strong> nội dung.</p>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

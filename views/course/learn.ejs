@@ -1,0 +1,213 @@
+(() => {
+    const token = Auth.getToken();
+    const user = Auth.getUser();
+    if (!token || !user) {
+        location.href = '/login.html';
+        return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get('courseId');
+    let currentLessonId = params.get('lessonId');
+
+    let course = null;
+    let currentLesson = null;
+    let progress = {};
+
+    async function loadCourse() {
+        try {
+            course = await Api.fetchWithAuth(`/api/courses/${courseId}/curriculum`, 'GET', token);
+            document.title = `${course.Title} - Learning`;
+
+            const html = course.Sections.map(section => `
+                <div class="section">
+                    <div class="section-header">${section.Title}</div>
+                    <div class="lesson-list">
+                        ${section.Lessons.map(lesson => `
+                            <div class="lesson-item ${lesson.LessonID === currentLessonId ? 'active' : ''} ${progress[lesson.LessonID] ? 'completed' : ''}"
+                                onclick="loadLesson('${lesson.LessonID}')"
+                                data-lesson-id="${lesson.LessonID}">
+                                <img src="/images/icons/${lesson.Type}.svg" class="lesson-icon">
+                                <span>${lesson.Title}</span>
+                                ${progress[lesson.LessonID] ? '<span>✓</span>' : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('curriculum').innerHTML = html;
+
+            if (!currentLessonId) {
+                const firstLesson = course.Sections[0].Lessons[0];
+                if (firstLesson) loadLesson(firstLesson.LessonID);
+            }
+
+            updateProgress();
+        } catch (err) {
+            console.error('Failed to load course:', err);
+            location.href = '/dashboard.html';
+        }
+    }
+
+    async function loadLesson(lessonId) {
+        try {
+            currentLessonId = lessonId;
+            currentLesson = await Api.fetchWithAuth(`/api/lessons/${lessonId}`, 'GET', token);
+            history.pushState({}, '', `?courseId=${courseId}&lessonId=${lessonId}`);
+
+            document.querySelectorAll('.lesson-item').forEach(i => i.classList.toggle('active', i.dataset.lessonId === lessonId));
+            document.getElementById('lessonTitle').textContent = currentLesson.Title;
+
+            const completeBtn = document.getElementById('completeButton');
+            completeBtn.textContent = progress[lessonId] ? 'Completed' : 'Mark as Complete';
+            completeBtn.disabled = progress[lessonId];
+
+            let html = '';
+            switch (currentLesson.Type) {
+                case 'video':
+                    html = `
+                        <div class="video-container">
+                            <iframe src="${currentLesson.VideoURL}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                        <div>${currentLesson.Content || ''}</div>`;
+                    break;
+
+                case 'quiz':
+                    html = `
+                        <div class="quiz-container">
+                            <h3>${currentLesson.Title}</h3>
+                            <form id="quizForm">
+                                ${(currentLesson.Questions || []).map((q, idx) => `
+                                    <div class="card">
+                                        <h4>${idx + 1}. ${q.QuestionText}</h4>
+                                        ${q.Options.map(opt => `
+                                            <label><input type="${q.Type === 'multiple' ? 'checkbox' : 'radio'}" name="q${q.QuestionID}" value="${opt.OptionID}"> ${opt.Text}</label>
+                                        `).join('')}
+                                    </div>`).join('')}
+                                <button type="submit" class="btn">Submit Quiz</button>
+                            </form>
+                        </div>`;
+                    break;
+
+                case 'assignment':
+                    html = `
+                        <div class="assignment-container">
+                            <h3>${currentLesson.Title}</h3>
+                            <div>${currentLesson.Content || ''}</div>
+                            <form id="assignmentForm">
+                                <textarea placeholder="Your submission"></textarea>
+                                <input type="file" multiple>
+                                <button type="submit" class="btn">Submit</button>
+                            </form>
+                        </div>`;
+                    break;
+
+                default:
+                    html = `<div>${currentLesson.Content || ''}</div>`;
+            }
+
+            html += `
+                <div class="navigation-buttons">
+                    <button onclick="navigate('prev')" class="btn">Previous</button>
+                    <button onclick="navigate('next')" class="btn">Next</button>
+                </div>`;
+
+            document.getElementById('contentBody').innerHTML = html;
+            setupFormHandlers();
+            loadNotes();
+        } catch (err) {
+            console.error('Failed to load lesson:', err);
+        }
+    }
+
+    async function markComplete() {
+        try {
+            await Api.fetchWithAuth('/api/progress', 'POST', token, {
+                LessonID: currentLessonId,
+                CourseID: courseId,
+                Status: 'completed'
+            });
+            progress[currentLessonId] = true;
+            document.querySelector(`[data-lesson-id="${currentLessonId}"]`).classList.add('completed');
+            document.getElementById('completeButton').textContent = 'Completed';
+            document.getElementById('completeButton').disabled = true;
+            updateProgress();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to update progress');
+        }
+    }
+
+    function navigate(dir) {
+        const items = [...document.querySelectorAll('.lesson-item')];
+        const idx = items.findIndex(i => i.dataset.lessonId === currentLessonId);
+        if (dir === 'prev' && idx > 0) loadLesson(items[idx - 1].dataset.lessonId);
+        if (dir === 'next' && idx < items.length - 1) loadLesson(items[idx + 1].dataset.lessonId);
+    }
+
+    function updateProgress() {
+        const total = document.querySelectorAll('.lesson-item').length;
+        const done = Object.keys(progress).length;
+        document.getElementById('courseProgress').style.width = (done / total * 100) + '%';
+    }
+
+    window.toggleNotes = () => document.getElementById('notesPanel').classList.toggle('open');
+
+    async function loadNotes() {
+        try {
+            const notes = await Api.fetchWithAuth(`/api/notes?lessonId=${currentLessonId}`, 'GET', token);
+            document.getElementById('noteEditor').value = notes.Content || '';
+        } catch (err) {
+            console.error('Failed to load notes:', err);
+        }
+    }
+
+    async function saveNotes() {
+        try {
+            const content = document.getElementById('noteEditor').value;
+            await Api.fetchWithAuth('/api/notes', 'POST', token, {
+                LessonID: currentLessonId,
+                Content: content
+            });
+            alert('Notes saved!');
+        } catch (err) {
+            alert('Failed to save notes');
+        }
+    }
+
+    function setupFormHandlers() {
+        const quizForm = document.getElementById('quizForm');
+        if (quizForm) {
+            quizForm.onsubmit = async e => {
+                e.preventDefault();
+                const answers = [...quizForm.elements]
+                    .filter(el => el.checked)
+                    .map(el => ({ QuestionID: el.name.substring(1), SelectedOptions: [el.value] }));
+                const result = await Api.fetchWithAuth('/api/quizzes/submit', 'POST', token, {
+                    LessonID: currentLessonId, Answers: answers
+                });
+                alert(`Quiz submitted! Score: ${result.Score}/${result.Total}`);
+                if (result.Passed) markComplete();
+            };
+        }
+
+        const assignmentForm = document.getElementById('assignmentForm');
+        if (assignmentForm) {
+            assignmentForm.onsubmit = async e => {
+                e.preventDefault();
+                const data = new FormData(assignmentForm);
+                await Api.fetchWithAuth('/api/assignments/submit', 'POST', token, data);
+                alert('Assignment submitted!');
+                markComplete();
+            };
+        }
+    }
+
+    window.saveNotes = saveNotes;
+    window.markComplete = markComplete;
+    window.loadLesson = loadLesson;
+    window.navigate = navigate;
+
+    loadCourse();
+})();

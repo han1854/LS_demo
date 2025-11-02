@@ -1,0 +1,395 @@
+/* Course Page Specific Styles */
+
+.course-header {
+    background: linear-gradient(to right, var(--primary), var(--primary-light));
+    padding: 4rem 0;
+    color: white;
+}
+
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.breadcrumbs a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+}
+
+.breadcrumbs i {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.course-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.course-description {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.course-meta {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.meta-item i {
+    font-size: 1.25rem;
+}
+
+.course-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.wishlist-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.wishlist-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.progress-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.progress-bar {
+    width: 150px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress {
+    width: var(--progress, 0%);
+    height: 100%;
+    background: white;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.rating-progress {
+    width: var(--rating-width, 0%);
+}
+
+.course-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.section-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border);
+}
+
+.section-tab {
+    padding: 1rem 0;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: none;
+    position: relative;
+}
+
+.section-tab.active {
+    color: var(--primary);
+}
+
+.section-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+}
+
+.highlights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.highlight-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.highlight-item i {
+    color: var(--success);
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+.course-requirements ul {
+    list-style: none;
+    padding: 0;
+}
+
+.course-requirements li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.course-requirements li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.75rem;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary);
+}
+
+.curriculum-section {
+    background: var(--surface);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.section-header {
+    padding: 1rem 1.5rem;
+    background: var(--background);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.section-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1.125rem;
+}
+
+.section-meta {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.section-content {
+    padding: 1rem 1.5rem;
+}
+
+.lesson-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.lesson-item:last-child {
+    border: none;
+}
+
+.lesson-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.lesson-info i {
+    color: var(--primary);
+}
+
+.lesson-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.instructor-profile {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.instructor-header {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.instructor-header img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.instructor-stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.reviews-summary {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.rating-overall {
+    text-align: center;
+    padding: 2rem;
+    background: var(--surface);
+    border-radius: 12px;
+}
+
+.rating-overall h3 {
+    font-size: 3rem;
+    margin: 0;
+}
+
+.stars {
+    color: var(--warning);
+    font-size: 1.25rem;
+    margin: 0.5rem 0;
+}
+
+.rating-bars {
+    padding: 2rem;
+    background: var(--surface);
+    border-radius: 12px;
+}
+
+.rating-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.review-item {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.review-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.review-header img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+
+.review-date {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.instructor-response {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--background);
+    border-radius: 8px;
+    margin-left: 3rem;
+}
+
+.course-sidebar {
+    position: sticky;
+    top: 80px;
+}
+
+.course-preview {
+    background: var(--surface);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.preview-video video {
+    width: 100%;
+    display: block;
+}
+
+.course-features {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.features-list {
+    list-style: none;
+    padding: 0;
+}
+
+.features-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.features-list li:last-child {
+    border: none;
+}
+
+.features-list i {
+    color: var(--primary);
+}
+
+.share-course {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.share-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.share-buttons .btn {
+    flex: 1;
+}

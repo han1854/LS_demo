@@ -6,16 +6,16 @@ const xssClean = require('xss-clean');
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
-  max: 100, // Giới hạn mỗi IP trong 100 request mỗi 15 phút
+  max: 1000, // Tăng giới hạn lên 1000 request mỗi 15 phút
   message: 'Quá nhiều request từ IP này, vui lòng thử lại sau 15 phút',
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// API rate limiting middleware (giới hạn chặt chẽ hơn cho các endpoint nhạy cảm)
+// API rate limiting middleware
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 50,
+  max: 500, // Tăng giới hạn lên 500 request mỗi 15 phút
   message: 'Quá nhiều request API từ IP này',
   standardHeaders: true,
   legacyHeaders: false,
@@ -81,6 +81,21 @@ const validateTokenFormat = (req, res, next) => {
   } else {
     res.status(401).json({ message: 'Authorization header required' });
   }
+};
+
+// Allow unauthenticated GET requests but require auth for non-GET methods
+const requireAuthUnlessGet = (req, res, next) => {
+  if (req.method === 'GET') return next();
+  // For non-GET requests, reuse validateTokenFormat logic
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    if (token && token.length >= 32 && token.length <= 512) {
+      return next();
+    }
+    return res.status(401).json({ message: 'Invalid token format' });
+  }
+  return res.status(401).json({ message: 'Authorization header required' });
 };
 
 // Security headers middleware
@@ -160,6 +175,7 @@ module.exports = {
   helmetConfig,
   corsOptions,
   validateTokenFormat,
+  requireAuthUnlessGet,
   securityHeaders,
   sanitizeRequest,
   // Middleware tổng hợp cho các route API

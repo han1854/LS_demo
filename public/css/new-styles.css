@@ -1,0 +1,284 @@
+/* --- General --- */
+body {
+  font-family: "Inter", sans-serif;
+  background: #f9fafb;
+  margin: 0;
+  color: #1f2937;
+}
+a { text-decoration: none; color: inherit; }
+
+/* --- Header & Navigation --- */
+.header {
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: 64px;
+}
+
+.header .logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+.header {
+    height: 64px;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 100%;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    gap: 0.5rem;
+}
+
+.nav-link {
+    color: #374151;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.nav-link i {
+    font-size: 1.1rem;
+}
+
+/* Auth Buttons */
+.auth-buttons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.btn-text {
+    color: #374151;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-text:hover {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+/* Profile Menu */
+.profile-toggle {
+    background: transparent;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    padding: 0;
+}
+
+.profile-toggle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 2rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    z-index: 100;
+}
+
+.profile-menu.show {
+    display: block;
+}
+
+.profile-menu a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #374151;
+    transition: all 0.2s;
+}
+
+.profile-menu a:hover {
+    background: #f3f4f6;
+    color: #2563eb;
+}
+
+.profile-menu a i {
+    width: 1.25rem;
+    text-align: center;
+}
+
+/* My Courses Link */
+.my-courses {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #374151;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.my-courses:hover, .my-courses.active {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+/* --- Breadcrumb --- */
+.breadcrumb {
+  background: #f3f4f6;
+  padding: 0.75rem 2rem;
+  font-size: 0.9rem;
+}
+.breadcrumb a { color: #2563eb; }
+
+/* --- Banner --- */
+.banner {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white;
+  text-align: center;
+  padding: 3rem 1rem;
+  border-radius: 0 0 1.5rem 1.5rem;
+}
+.banner h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* --- Main Layout --- */
+.container {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1280px;
+  margin: auto;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+  background: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.sidebar h3 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar li {
+  margin-bottom: 0.75rem;
+}
+.sidebar a {
+  color: #374151;
+  font-weight: 500;
+}
+.sidebar a:hover {
+  color: #2563eb;
+}
+
+/* --- Content (Courses) --- */
+.content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+.course-card {
+  background: white;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+.course-card:hover {
+  transform: translateY(-5px);
+}
+.course-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+.course-info {
+  padding: 1rem;
+}
+.course-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.course-info p {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* --- Footer --- */
+footer {
+  background: #111827;
+  color: #9ca3af;
+  text-align: center;
+  padding: 2rem;
+  margin-top: 2rem;
+  border-radius: 1.5rem 1.5rem 0 0;
+}

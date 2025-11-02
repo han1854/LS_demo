@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= (course && course.Title) ? (course.Title + ' | LearnSpace') : (title || 'Chi tiết khóa học - LearnSpace') %></title>
+    
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f9fafb;
+            color: #333;
+        }
+        .course-header {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: #fff;
+            padding: 3rem 0;
+            margin-bottom: 3rem;
+        }
+        .course-header h1 {
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .course-header p {
+            font-size: 1.1rem;
+            max-width: 800px;
+        }
+        .course-stats {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .rating-stars {
+            color: #ffd43b;
+        }
+        .course-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+        .curriculum-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.2s ease;
+        }
+        .curriculum-section:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .section-header {
+            padding: 1rem;
+            background: #f3f4f6;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .section-content {
+            padding: 1rem 1.25rem;
+            display: none;
+        }
+        .lesson-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .lesson-item:last-child {
+            border-bottom: none;
+        }
+        .lesson-icon {
+            width: 22px;
+            height: 22px;
+        }
+        .enrollment-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1.75rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2563eb;
+            margin: 1rem 0;
+        }
+        .btn-enroll {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+        .btn-enroll:hover {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        }
+        .instructor-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        .instructor-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .instructor-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .reviews-section {
+            margin-top: 3rem;
+        }
+        .review-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/">LearnSpace</a>
+            <div>
+                <a href="/" class="nav-link d-inline-block">Trang chủ</a>
+                <a href="/catalog" class="nav-link d-inline-block">Khóa học</a>
+                <a href="/dashboard" id="dashboardLink" class="nav-link d-inline-block" style="display:none;">Bảng điều khiển</a>
+                <a href="/login" id="loginLink" class="nav-link d-inline-block">Đăng nhập</a>
+                <a href="/register" id="registerLink" class="nav-link d-inline-block">Đăng ký</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Course Header -->
+    <section class="course-header text-center mt-5 pt-5">
+        <div class="container">
+            <h1 id="courseTitle"><%= course ? course.Title : 'Đang tải...' %></h1>
+            <p id="courseDescription"><%= course ? (course.Description || '') : 'Vui lòng chờ trong giây lát.' %></p>
+            <div class="course-stats justify-content-center">
+                <div class="stat-item"><i class="fa-solid fa-star rating-stars"></i><span id="courseRating"><%= course && course.ratings && course.ratings.length ? ( (course.ratings.reduce((s,r)=>s+Number(r.Rating),0)/course.ratings.length).toFixed(1) ) : '0.0' %></span></div>
+                <div class="stat-item"><i class="fa-solid fa-users"></i><span id="enrollmentCount"><%= course && course.enrollments ? course.enrollments.length + ' học viên' : '0 học viên' %></span></div>
+                <div class="stat-item"><i class="fa-regular fa-clock"></i><span id="lastUpdated"><%= course ? (course.LastModifiedAt ? ('Cập nhật: ' + new Date(course.LastModifiedAt).toLocaleDateString('vi-VN')) : '') : 'Đang cập nhật...' %></span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main -->
+    <main class="container mb-5">
+        <div class="course-content">
+            <div>
+                                <h3 class="fw-semibold mb-3">Bạn sẽ học được gì</h3>
+                                <ul id="learningObjectives" class="mb-5">
+                                    <% if (course && course.LearningObjectives) { %>
+                                        <% try { const obj = JSON.parse(course.LearningObjectives); obj.forEach(function(o){ %>
+                                            <li><%= o %></li>
+                                        <% }) } catch(e){ %>
+                                            <% /* If not JSON, attempt to render as text lines */ %>
+                                            <% (course.LearningObjectives || '').split('\n').forEach(function(o){ if(o.trim()) { %>
+                                                <li><%= o %></li>
+                                            <% } }); %>
+                                    <% } %>
+                                    <% } %>
+                                </ul>
+
+                                <h3 class="fw-semibold mb-3">Nội dung khóa học</h3>
+                                <div id="curriculum">
+                                    <% if (course && course.lessons && course.lessons.length) { %>
+                                        <div class="curriculum-section">
+                                            <div class="section-header">Bài học</div>
+                                            <div class="section-content" style="display:block;">
+                                                <% course.lessons.forEach(function(l){ %>
+                                                    <div class="lesson-item">
+                                                        <div class="lesson-icon"><i class="fa-solid fa-play"></i></div>
+                                                        <span><%= l.Title %></span>
+                                                        <small class="text-muted ms-auto"><%= l.Duration ? (l.Duration + ' phút') : '' %></small>
+                                                    </div>
+                                                <% }); %>
+                                            </div>
+                                        </div>
+                                    <% } else { %>
+                                        <p class="text-muted">Nội dung chưa được cập nhật.</p>
+                                    <% } %>
+                                </div>
+
+                                <div class="reviews-section">
+                                        <h3 class="fw-semibold mb-3">Đánh giá của học viên</h3>
+                                        <div id="reviews">
+                                            <% if (course && course.ratings && course.ratings.length) { %>
+                                                <% course.ratings.forEach(function(r){ %>
+                                                    <div class="review-card">
+                                                        <div class="fw-semibold"><%= (r.User && (r.User.FirstName || r.User.LastName)) ? ( (r.User.FirstName || '') + ' ' + (r.User.LastName || '') ) : 'Học viên' %></div>
+                                                        <div class="text-warning small mb-1"><%= '★'.repeat(r.Rating) %></div>
+                                                        <p class="small text-secondary mb-0"><%= r.Review || r.Comment || '' %></p>
+                                                    </div>
+                                                <% }); %>
+                                            <% } else { %>
+                                                <p class="text-muted">Chưa có đánh giá nào.</p>
+                                            <% } %>
+                                        </div>
+                                </div>
+            </div>
+
+            <aside>
+                                        <div class="enrollment-card">
+                                        <div class="price" id="coursePrice"><%= course ? (course.Price && course.Price>0 ? new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(course.Price) : 'Miễn phí') : '₫0' %></div>
+                                        <% if (course) { %>
+                                            <% const enrolled = (typeof currentUser !== 'undefined' && currentUser && course.enrollments && course.enrollments.some(e => e.UserID === currentUser.UserID || e.UserID === currentUser.id)); %>
+                                              <button id="enrollButton" class="btn-enroll w-100" data-href="<%= enrolled ? ('/learn/' + course.CourseID) : ('/login?redirect=/course/' + course.CourseID) %>" onclick="location.href=this.dataset.href"><%= enrolled ? 'Vào học ngay' : 'Ghi danh ngay' %></button>
+                                        <% } else { %>
+                                            <button id="enrollButton" class="btn-enroll w-100">Ghi danh ngay</button>
+                                        <% } %>
+                                        <p class="mt-3 text-muted">Đảm bảo hoàn tiền trong 30 ngày</p>
+
+                    <div class="text-start mt-4">
+                        <h5>Khóa học bao gồm:</h5>
+                        <ul class="mt-3 small">
+                            <li id="videoDuration">0 giờ video</li>
+                            <li id="articleCount">0 bài viết</li>
+                            <li id="resourceCount">0 tài nguyên tải xuống</li>
+                            <li>Truy cập trọn đời</li>
+                            <li>Chứng chỉ hoàn thành</li>
+                        </ul>
+                    </div>
+                </div>
+
+                    <div class="instructor-card">
+                    <h5>Giảng viên</h5>
+                    <div class="instructor-info mt-3">
+                        <img id="instructorAvatar" src="<%= (course && course.instructor && course.instructor.Avatar) ? course.instructor.Avatar : '/images/default-avatar.jpg' %>" class="instructor-avatar">
+                        <div>
+                            <strong id="instructorFullName"><%= (course && course.instructor) ? ((course.instructor.FirstName || '') + ' ' + (course.instructor.LastName || '')) : 'Chưa cập nhật' %></strong>
+                            <div id="instructorTitle" class="text-muted small"><%= (course && course.instructor && course.instructor.Title) ? course.instructor.Title : '' %></div>
+                        </div>
+                    </div>
+                    <p id="instructorBio" class="mt-3 small text-secondary"><%= (course && course.instructor && course.instructor.Bio) ? course.instructor.Bio : '' %></p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        const token = Auth.getToken();
+        const user = Auth.getUser();
+
+        if (token && user) {
+            document.getElementById('loginLink').style.display = 'none';
+            document.getElementById('registerLink').style.display = 'none';
+            document.getElementById('dashboardLink').style.display = 'inline';
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const courseId = params.get('id');
+        if (!courseId) location.href = '/catalog';
+
+        async function loadCourseDetails() {
+            try {
+                const course = await Api.fetchWithAuth('/api/courses/' + courseId);
+
+                document.title = `${course.Title} | LearnSpace`;
+                document.getElementById('courseTitle').textContent = course.Title;
+                document.getElementById('courseDescription').textContent = course.Description;
+                document.getElementById('courseRating').textContent = course.Rating?.toFixed(1) || '0.0';
+                document.getElementById('enrollmentCount').textContent = `${course.EnrollmentCount || 0} học viên`;
+                document.getElementById('lastUpdated').textContent = 'Cập nhật: ' + new Date(course.UpdatedAt).toLocaleDateString('vi-VN');
+                document.getElementById('coursePrice').textContent = course.IsFree ? 'Miễn phí' : `$${course.Price}`;
+
+                const objectives = course.LearningObjectives || [];
+                document.getElementById('learningObjectives').innerHTML = objectives.map(o => `<li>${o}</li>`).join('');
+
+                document.getElementById('curriculum').innerHTML = (course.Curriculum || []).map(sec => `
+                    <div class="curriculum-section">
+                        <div class="section-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">
+                            ${sec.Title}
+                        </div>
+                        <div class="section-content">
+                            ${sec.Lessons.map(l => `
+                                <div class="lesson-item">
+                                    <img src="/images/icons/${l.Type}.svg" class="lesson-icon">
+                                    <span>${l.Title}</span>
+                                    <small class="text-muted ms-auto">${l.Duration}</small>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`).join('');
+
+                const instructor = course.Instructor || {};
+                document.getElementById('instructorFullName').textContent = instructor.FullName || 'Chưa cập nhật';
+                document.getElementById('instructorTitle').textContent = instructor.Title || '';
+                document.getElementById('instructorBio').textContent = instructor.Bio || '';
+                if (instructor.AvatarURL) document.getElementById('instructorAvatar').src = instructor.AvatarURL;
+
+                const reviews = course.Reviews || [];
+                document.getElementById('reviews').innerHTML = reviews.length > 0
+                    ? reviews.map(r => `
+                        <div class="review-card">
+                            <div class="fw-semibold">${r.UserName}</div>
+                            <div class="text-warning small mb-1">${'★'.repeat(r.Rating)}</div>
+                            <p class="small text-secondary mb-0">${r.Comment}</p>
+                        </div>
+                    `).join('')
+                    : '<p class="text-muted">Chưa có đánh giá nào.</p>';
+
+                const enrollButton = document.getElementById('enrollButton');
+                if (course.UserEnrolled) {
+                    enrollButton.textContent = 'Vào học ngay';
+                    enrollButton.onclick = () => location.href = `/learn?courseId=${courseId}`;
+                } else {
+                    enrollButton.onclick = () => enrollInCourse(courseId);
+                }
+
+            } catch (err) {
+                console.error(err);
+                location.href = '/catalog';
+            }
+        }
+
+        async function enrollInCourse(courseId) {
+            if (!token) return location.href = `/login?redirect=${encodeURIComponent(location.href)}`;
+            try {
+                await Api.fetchWithAuth('/api/enrollments', 'POST', token, { CourseID: courseId });
+                location.href = `/learn?courseId=${courseId}`;
+            } catch (err) {
+                alert('Ghi danh thất bại, vui lòng thử lại.');
+            }
+        }
+
+        loadCourseDetails();
+    </script>
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Learning Platform</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 64px);
+        }
+        
+        .sidebar {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: #e9ecef;
+        }
+        
+        .main-content {
+            padding: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1a73e8;
+            margin: 0.5rem 0;
+        }
+        
+        .course-progress {
+            margin-bottom: 2rem;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+        
+        .progress-bar .fill {
+            height: 100%;
+            background: #1a73e8;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .upcoming-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .upcoming-list li {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .upcoming-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .certificate-card {
+            border: 1px solid #dee2e6;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-menu">
+        <div class="logo">LearnSpace</div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/catalog.html">Explore</a>
+            <a href="#" onclick="Auth.logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-grid">
+        <div class="sidebar">
+            <ul class="sidebar-menu" id="sideMenu">
+                <li><a href="#" class="active" data-view="overview">Overview</a></li>
+                <li><a href="#" data-view="my-courses">My Courses</a></li>
+                <li><a href="#" data-view="assignments">Assignments</a></li>
+                <li><a href="#" data-view="certificates">Certificates</a></li>
+                <li><a href="#" data-view="settings">Settings</a></li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <!-- Overview Section -->
+            <div id="overview" class="dashboard-section">
+                <h2>Dashboard Overview</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Enrolled Courses</h3>
+                        <div class="value" id="enrolledCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Completed Courses</h3>
+                        <div class="value" id="completedCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Active Assignments</h3>
+                        <div class="value" id="assignmentCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Average Score</h3>
+                        <div class="value" id="avgScore">0%</div>
+                    </div>
+                </div>
+
+                <h3>Current Progress</h3>
+                <div id="currentProgress">
+                    <!-- Progress cards will be loaded here -->
+                </div>
+
+                <h3>Upcoming Deadlines</h3>
+                <ul class="upcoming-list" id="upcomingList">
+                    <!-- Upcoming deadlines will be loaded here -->
+                </ul>
+            </div>
+
+            <!-- My Courses Section -->
+            <div id="my-courses" class="dashboard-section" style="display:none">
+                <h2>My Courses</h2>
+                <div class="course-grid" id="myCoursesList">
+                    <!-- Enrolled courses will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Assignments Section -->
+            <div id="assignments" class="dashboard-section" style="display:none">
+                <h2>Assignments</h2>
+                <div id="assignmentsList">
+                    <!-- Assignments will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Certificates Section -->
+            <div id="certificates" class="dashboard-section" style="display:none">
+                <h2>My Certificates</h2>
+                <div id="certificatesList">
+                    <!-- Certificates will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settings" class="dashboard-section" style="display:none">
+                <h2>Account Settings</h2>
+                <form id="settingsForm" class="form">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="fullName">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email">
+                    </div>
+                    <div class="form-group">
+                        <label>Profile Picture</label>
+                        <input type="file" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        // Authentication check
+        const token = Auth.getToken();
+        const user = Auth.getUser();
+        if (!token || !user) {
+            location.href = '/login.html';
+        }
+
+        // Navigation
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const view = e.target.dataset.view;
+                
+                // Update active state
+                document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Show selected section
+                document.querySelectorAll('.dashboard-section').forEach(section => {
+                    section.style.display = section.id === view ? 'block' : 'none';
+                });
+                
+                // Load section data if needed
+                if (view === 'my-courses') loadMyCourses();
+                if (view === 'assignments') loadAssignments();
+                if (view === 'certificates') loadCertificates();
+            });
+        });
+
+        // Load overview data
+        async function loadOverview() {
+            try {
+                const stats = await Api.fetchWithAuth('/api/users/stats', 'GET', token);
+                document.getElementById('enrolledCount').textContent = stats.enrolledCount || 0;
+                document.getElementById('completedCount').textContent = stats.completedCount || 0;
+                document.getElementById('assignmentCount').textContent = stats.activeAssignments || 0;
+                document.getElementById('avgScore').textContent = `${stats.averageScore || 0}%`;
+
+                // Load current progress
+                const progress = await Api.fetchWithAuth('/api/progress/current', 'GET', token);
+                const progressHtml = progress.map(p => `
+                    <div class="course-progress">
+                        <div class="progress-header">
+                            <strong>${p.CourseTitle}</strong>
+                            <span>${Math.round(p.Progress)}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="fill" style="width: ${p.Progress}%"></div>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('currentProgress').innerHTML = progressHtml;
+
+                // Load upcoming deadlines
+                const upcoming = await Api.fetchWithAuth('/api/assignments/upcoming', 'GET', token);
+                const upcomingHtml = upcoming.map(item => `
+                    <li>
+                        <strong>${item.Title}</strong>
+                        <div>Course: ${item.CourseTitle}</div>
+                        <div>Due: ${new Date(item.DueDate).toLocaleDateString()}</div>
+                    </li>
+                `).join('');
+                document.getElementById('upcomingList').innerHTML = upcomingHtml;
+
+            } catch(err) {
+                console.error('Failed to load overview:', err);
+            }
+        }
+
+        // Load enrolled courses
+        async function loadMyCourses() {
+            try {
+                const courses = await Api.fetchWithAuth('/api/enrollments/courses', 'GET', token);
+                const html = courses.map(course => `
+                    <div class="course-card">
+                        <img src="${course.ThumbnailURL || '/images/course-default.jpg'}" alt="${course.Title}" class="course-image">
+                        <div class="course-info">
+                            <div class="course-title">${course.Title}</div>
+                            <div class="course-instructor">${course.InstructorName}</div>
+                            <div class="progress-bar">
+                                <div class="fill" style="width: ${course.Progress}%"></div>
+                            </div>
+                            <a href="/course.html?id=${course.CourseID}" class="btn">Continue Learning</a>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('myCoursesList').innerHTML = html;
+            } catch(err) {
+                console.error('Failed to load courses:', err);
+            }
+        }
+
+        // Load assignments
+        async function loadAssignments() {
+            try {
+                const assignments = await Api.fetchWithAuth('/api/assignments/student', 'GET', token);
+                const html = assignments.map(assignment => `
+                    <div class="card">
+                        <h3>${assignment.Title}</h3>
+                        <p>${assignment.Description}</p>
+                        <div>Due: ${new Date(assignment.DueDate).toLocaleDateString()}</div>
+                        <div>Course: ${assignment.CourseTitle}</div>
+                        <a href="/assignment.html?id=${assignment.AssignmentID}" class="btn">
+                            ${assignment.Submitted ? 'View Submission' : 'Submit Assignment'}
+                        </a>
+                    </div>
+                `).join('');
+                document.getElementById('assignmentsList').innerHTML = html;
+            } catch(err) {
+                console.error('Failed to load assignments:', err);
+            }
+        }
+
+        // Load certificates
+        async function loadCertificates() {
+            try {
+                const certificates = await Api.fetchWithAuth('/api/certificates', 'GET', token);
+                const html = certificates.map(cert => `
+                    <div class="certificate-card">
+                        <h3>${cert.CourseTitle}</h3>
+                        <p>Completed: ${new Date(cert.CompletionDate).toLocaleDateString()}</p>
+                        <a href="${cert.CertificateURL}" class="btn" target="_blank">View Certificate</a>
+                    </div>
+                `).join('');
+                document.getElementById('certificatesList').innerHTML = html;
+            } catch(err) {
+                console.error('Failed to load certificates:', err);
+            }
+        }
+
+        // Load initial data
+        loadOverview();
+
+        // Settings form handler
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const formData = new FormData();
+                formData.append('FullName', document.getElementById('fullName').value);
+                formData.append('Email', document.getElementById('email').value);
+                
+                const fileInput = document.querySelector('input[type="file"]');
+                if (fileInput.files[0]) {
+                    formData.append('ProfilePicture', fileInput.files[0]);
+                }
+
+                await Api.fetchWithAuth('/api/users/profile', 'PUT', token, formData);
+                alert('Profile updated successfully');
+            } catch(err) {
+                alert('Failed to update profile: ' + (err.body?.message || err));
+            }
+        });
+    </script>
+</body>
+</html>

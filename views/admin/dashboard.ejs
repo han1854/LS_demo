@@ -1,0 +1,121 @@
+<%- include('../partials/head', { title: 'Admin Dashboard', pageStyles: ['admin', 'dashboard'] }) %>
+<%- include('../partials/nav') %>
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="row g-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Users</h6>
+                    <h2 id="totalUsers">...</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Courses</h6>
+                    <h2 id="totalCourses">...</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Revenue</h6>
+                    <h2 id="totalRevenue">...</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Active Students</h6>
+                    <h2 id="activeStudents">...</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light fw-bold">User Growth</div>
+                <div class="card-body">
+                    <canvas id="userGrowthChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light fw-bold">Revenue Trend</div>
+                <div class="card-body">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-light fw-bold">Recent Activities</div>
+        <div class="card-body" id="activityList">
+            <div class="text-muted">Loading activities...</div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const stats = await Api.fetchWithAuth('/api/admin/stats', 'GET');
+
+        totalUsers.textContent = stats.totalUsers;
+        totalCourses.textContent = stats.totalCourses;
+        totalRevenue.textContent = `$${stats.totalRevenue.toFixed(2)}`;
+        activeStudents.textContent = stats.activeStudents;
+
+        new Chart(userGrowthChart, {
+            type: 'line',
+            data: {
+                labels: stats.userGrowth.map(d => d.date),
+                datasets: [{
+                    label: 'New Users',
+                    data: stats.userGrowth.map(d => d.count),
+                    borderColor: '#2563eb',
+                    tension: 0.3,
+                    fill: false
+                }]
+            }
+        });
+
+        new Chart(revenueChart, {
+            type: 'bar',
+            data: {
+                labels: stats.revenueTrend.map(d => d.date),
+                datasets: [{
+                    label: 'Revenue',
+                    data: stats.revenueTrend.map(d => d.amount),
+                    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                    borderColor: '#2563eb',
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        const activities = await Api.fetchWithAuth('/api/admin/activities', 'GET');
+        activityList.innerHTML = activities.map(a => `
+            <div class="border-bottom py-2">
+                <div class="fw-semibold">${a.description}</div>
+                <small class="text-muted">${new Date(a.timestamp).toLocaleString()}</small>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error(err);
+        activityList.innerHTML = '<p class="text-danger">Failed to load data</p>';
+    }
+});
+</script>

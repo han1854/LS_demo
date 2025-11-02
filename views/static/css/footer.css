@@ -1,0 +1,44 @@
+/* footer.css — Footer */
+
+.footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 4rem 0 2rem;
+  color: var(--text-secondary);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: 3rem;
+  margin-bottom: 2rem;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 1.25rem;
+  text-decoration: none;
+  margin-bottom: 1rem;
+}
+
+.footer-links a {
+  display: block;
+  text-decoration: none;
+  color: var(--text-secondary);
+  padding: 0.25rem 0;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: var(--primary);
+}
+
+.footer-bottom {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
